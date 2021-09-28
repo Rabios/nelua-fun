@@ -1,0 +1,74 @@
+require "C.arg"
+require "easings"
+
+local function main(argc: cint, argv: *[0]cstring)
+  print(easings.linear(5))
+  print(easings.linear(5, 6, 7, 8))
+  
+  print(easings.sine.easeIn(5))
+  print(easings.sine.easeIn(5, 6, 7, 8))
+  print(easings.sine.easeOut(5))
+  print(easings.sine.easeOut(5, 6, 7, 8))
+  print(easings.sine.easeInOut(5))
+  print(easings.sine.easeInOut(5, 6, 7, 8))
+  
+  print(easings.cubic.easeIn(5))
+  print(easings.cubic.easeIn(5, 6, 7, 8))
+  print(easings.cubic.easeOut(5))
+  print(easings.cubic.easeOut(5, 6, 7, 8))
+  print(easings.cubic.easeInOut(5))
+  print(easings.cubic.easeInOut(5, 6, 7, 8))
+  
+  print(easings.quint.easeIn(5))
+  print(easings.quint.easeIn(5, 6, 7, 8))
+  print(easings.quint.easeOut(5))
+  print(easings.quint.easeOut(5, 6, 7, 8))
+  print(easings.quint.easeInOut(5))
+  print(easings.quint.easeInOut(5, 6, 7, 8))
+  
+  print(easings.circ.easeIn(0.1))
+  print(easings.circ.easeIn(0.1, 0.2, 0.3, 0.4))
+  print(easings.circ.easeOut(0.1))
+  print(easings.circ.easeOut(0.1, 0.2, 0.3, 0.4))
+  print(easings.circ.easeInOut(0.1))
+  print(easings.circ.easeInOut(0.1, 0.2, 0.3, 0.4))
+  
+  print(easings.elastic.easeIn(0.1))
+  print(easings.elastic.easeIn(0.1, 0.2, 0.3, 0.4))
+  print(easings.elastic.easeOut(0.1))
+  print(easings.elastic.easeOut(0.1, 0.2, 0.3, 0.4))
+  print(easings.elastic.easeInOut(0.1))
+  print(easings.elastic.easeInOut(0.1, 0.2, 0.3, 0.4))
+  
+  print(easings.quart.easeIn(5))
+  print(easings.quart.easeIn(5, 6, 7, 8))
+  print(easings.quart.easeOut(5))
+  print(easings.quart.easeOut(5, 6, 7, 8))
+  print(easings.quart.easeInOut(5))
+  print(easings.quart.easeInOut(5, 6, 7, 8))
+  
+  print(easings.expo.easeIn(5))
+  print(easings.expo.easeIn(5, 6, 7, 8))
+  print(easings.expo.easeOut(5))
+  print(easings.expo.easeOut(5, 6, 7, 8))
+  print(easings.expo.easeInOut(5))
+  print(easings.expo.easeInOut(5, 6, 7, 8))
+  
+  print(easings.back.easeIn(5))
+  print(easings.back.easeIn(5, 6, 7, 8))
+  print(easings.back.easeOut(5))
+  print(easings.back.easeOut(5, 6, 7, 8))
+  print(easings.back.easeInOut(5))
+  print(easings.back.easeInOut(5, 6, 7, 8))
+  
+  print(easings.bounce.easeIn(5))
+  print(easings.bounce.easeIn(5, 6, 7, 8))
+  print(easings.bounce.easeOut(5))
+  print(easings.bounce.easeOut(5, 6, 7, 8))
+  print(easings.bounce.easeInOut(5))
+  print(easings.bounce.easeInOut(5, 6, 7, 8))
+  
+  return 0
+end
+
+return main(C.argc, C.argv)

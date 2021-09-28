@@ -1,0 +1,4590 @@
+-- Resources:
+-- 1. https://glmatrix.net
+-- 2. https://github.com/raysan5/raylib/blob/master/src/raymath.h
+
+require "string"
+require "math"
+
+global vec2: type = @record { x: number, y: number }
+global vec3: type = @record { x: number, y: number, z: number }
+global vec4: type = @record { x: number, y: number, z: number, w: number }
+global quat: type = @record { data: [4]number }
+global quat2: type = @record { data: [8]number }
+global mat2: type = @record { data: [4]number }
+global mat2d: type = @record { data: [6]number }
+global mat3: type = @record { data: [9]number }
+global mat4: type = @record { data: [16]number }
+
+## vec2.value.is_vec2 = true
+## vec3.value.is_vec3 = true
+## vec4.value.is_vec4 = true
+## quat.value.is_quat = true
+## quat2.value.is_quat2 = true
+## mat2.value.is_mat2 = true
+## mat2d.value.is_mat2d = true
+## mat3.value.is_mat3 = true
+## mat4.value.is_mat4 = true
+
+global mathkit = @record {}
+global mathkit.vec2 = @record {}
+global mathkit.vec3 = @record {}
+global mathkit.vec4 = @record {}
+global mathkit.quat = @record {}
+global mathkit.quat2 = @record {}
+global mathkit.mat2 = @record {}
+global mathkit.mat2d = @record {}
+global mathkit.mat3 = @record {}
+global mathkit.mat4 = @record {}
+
+--------------------------------------------------------------------
+--------------------------- module: util ---------------------------
+--------------------------------------------------------------------
+function mathkit.clamp(value: number, min: number, max: number): number
+  local res: number = (value < min) and min or value
+  return (res > max) and max or res
+end
+
+function mathkit.lerp(start: number, endval: number, amount: number): number
+  return start + amount * (endval - start)
+end
+
+function mathkit.norm(value: number, start: number, endval: number): number
+  return (value - start) / (endval - start)
+end
+
+function mathkit.remap(value: number, inputStart: number, inputEnd: number, outputStart: number, outputEnd: number): number
+  return (value - inputStart) / (inputEnd - inputStart) * (outputEnd - outputStart) + outputStart
+end
+
+--------------------------------------------------------------------
+--------------------------- module: init ---------------------------
+--------------------------------------------------------------------
+function mathkit.vec2.create(xpos: number, ypos: number): vec2
+  return (@vec2) { x = xpos, y = ypos }
+end
+
+function mathkit.vec3.create(xpos: number, ypos: number, zpos: number): vec3
+  return (@vec3) { x = xpos, y = ypos, z = zpos }
+end
+
+function mathkit.vec4.create(xpos: number, ypos: number, zpos: number, wpos: number): vec4
+  return (@vec4) { x = xpos, y = ypos, z = zpos, w = wpos }
+end
+
+function mathkit.quat.create(m: [4]number): quat
+  return (@quat) { data = m }
+end
+
+function mathkit.quat2.create(m: [8]number): quat2
+  return (@quat2) { data = m }
+end
+
+function mathkit.mat2.create(m: [4]number): mat2
+  return (@mat2) { data = m }
+end
+
+function mathkit.mat2d.create(m: [6]number): mat2d
+  return (@mat2d) { data = m }
+end
+
+function mathkit.mat3.create(m: [9]number): mat3
+  return (@mat3) { data = m }
+end
+
+function mathkit.mat4.create(m: [16]number): mat4
+  return (@mat4) { data = m }
+end
+
+--------------------------------------------------------------------
+------------------------- module: meta (vec2) ----------------------
+--------------------------------------------------------------------
+function vec2.__lt(v1: vec2, v2: vec2): boolean
+  return (v1.x < v2.x) and (v1.y < v2.y)
+end
+
+function vec2.__le(v1: vec2, v2: vec2): boolean
+  return (v1.x <= v2.x) and (v1.y <= v2.y)
+end
+
+function vec2.__eq(v1: vec2, v2: vec2): boolean
+  return (v1.x == v2.x) and (v1.y == v2.y)
+end
+
+function vec2.__add(v1: vec2, v2: vec2): vec2
+  return (@vec2) {
+    x = v1.x + v2.x,
+    y = v1.y + v2.y
+  }
+end
+
+function vec2.__sub(v1: vec2, v2: vec2): vec2
+  return (@vec2) {
+    x = v1.x - v2.x,
+    y = v1.y - v2.y
+  }
+end
+
+function vec2.__mul(v1: vec2, v2: vec2): vec2
+  return (@vec2) {
+    x = v1.x * v2.x,
+    y = v1.y * v2.y
+  }
+end
+
+function vec2.__div(v1: vec2, v2: vec2): vec2
+  return (@vec2) {
+    x = v1.x / v2.x,
+    y = v1.y / v2.y
+  }
+end
+
+function vec2.__idiv(v1: vec2, v2: vec2): vec2
+  return (@vec2) {
+    x = v1.x // v2.x,
+    y = v1.y // v2.y
+  }
+end
+
+function vec2.__tdiv(v1: vec2, v2: vec2): vec2
+  return (@vec2) {
+    x = v1.x /// v2.x,
+    y = v1.y /// v2.y
+  }
+end
+
+function vec2.__mod(v1: vec2, v2: vec2): vec2
+  return (@vec2) {
+    x = v1.x % v2.x,
+    y = v1.y % v2.y
+  }
+end
+
+function vec2.__tmod(v1: vec2, v2: vec2): vec2
+  return (@vec2) {
+    x = v1.x %%% v2.x,
+    y = v1.y %%% v2.y
+  }
+end
+
+function vec2.__pow(v: vec2, n: number): vec2
+  return (@vec2) {
+    x = v.x ^ n,
+    y = v.y ^ n
+  }
+end
+
+function vec2:__unm(): vec2
+  return (@vec2) {
+    x = -self.x,
+    y = -self.y
+  }
+end
+
+function vec2:__len(): number
+  return math.sqrt((self.x * self.x) + (self.y * self.y))
+end
+
+function vec2:__tostring(): string
+  return "vec2(" .. self.x .. ", " .. self.y .. ")"
+end
+
+--------------------------------------------------------------------
+------------------------- module: meta (vec3) ----------------------
+--------------------------------------------------------------------
+function vec3.__lt(v1: vec3, v2: vec3): boolean
+  return (v1.x < v2.x) and (v1.y < v2.y) and (v1.z < v2.z)
+end
+
+function vec3.__le(v1: vec3, v2: vec3): boolean
+  return (v1.x <= v2.x) and (v1.y <= v2.y) and (v1.z <= v2.z)
+end
+
+function vec3.__eq(v1: vec3, v2: vec3): boolean
+  return (v1.x == v2.x) and (v1.y == v2.y) and (v1.z == v2.z)
+end
+
+function vec3.__add(v1: vec3, v2: vec3): vec3
+  return (@vec3) {
+    x = v1.x + v2.x,
+    y = v1.y + v2.y,
+    z = v1.z + v2.z
+  }
+end
+
+function vec3.__sub(v1: vec3, v2: vec3): vec3
+  return (@vec3) {
+    x = v1.x - v2.x,
+    y = v1.y - v2.y,
+    z = v1.z - v2.z
+  }
+end
+
+function vec3.__mul(v1: vec3, v2: vec3): vec3
+  return (@vec3) {
+    x = v1.x * v2.x,
+    y = v1.y * v2.y,
+    z = v1.z * v2.z
+  }
+end
+
+function vec3.__div(v1: vec3, v2: vec3): vec3
+  return (@vec3) {
+    x = v1.x / v2.x,
+    y = v1.y / v2.y,
+    z = v1.z / v2.z
+  }
+end
+
+function vec3.__idiv(v1: vec3, v2: vec3): vec3
+  return (@vec3) {
+    x = v1.x // v2.x,
+    y = v1.y // v2.y,
+    z = v1.z // v2.z
+  }
+end
+
+function vec3.__tdiv(v1: vec3, v2: vec3): vec3
+  return (@vec3) {
+    x = v1.x /// v2.x,
+    y = v1.y /// v2.y,
+    z = v1.z /// v2.z
+  }
+end
+
+function vec3.__mod(v1: vec3, v2: vec3): vec3
+  return (@vec3) {
+    x = v1.x % v2.x,
+    y = v1.y % v2.y,
+    z = v1.z % v2.z
+  }
+end
+
+function vec3.__tmod(v1: vec3, v2: vec3): vec3
+  return (@vec3) {
+    x = v1.x %%% v2.x,
+    y = v1.y %%% v2.y,
+    z = v1.z %%% v2.z
+  }
+end
+
+function vec3.__pow(v: vec3, n: number): vec3
+  return (@vec3) {
+    x = v.x ^ n,
+    y = v.y ^ n,
+    z = v.z ^ n
+  }
+end
+
+function vec3:__unm(): vec3
+  return (@vec3) {
+    x = -self.x,
+    y = -self.y,
+    z = -self.z
+  }
+end
+
+function vec3:__len(): number
+  return math.sqrt((self.x * self.x) + (self.y * self.y) + (self.z * self.z))
+end
+
+function vec3:__tostring(): string
+  return "vec3(" .. self.x .. ", " .. self.y .. ", " .. self.z .. ")"
+end
+
+--------------------------------------------------------------------
+------------------------- module: meta (vec4) ----------------------
+--------------------------------------------------------------------
+function vec4.__lt(v1: vec4, v2: vec4): boolean
+  return (v1.x < v2.x) and (v1.y < v2.y) and (v1.z < v2.z) and (v1.w < v2.w)
+end
+
+function vec4.__le(v1: vec4, v2: vec4): boolean
+  return (v1.x <= v2.x) and (v1.y <= v2.y) and (v1.z <= v2.z) and (v1.w <= v2.w)
+end
+
+function vec4.__eq(v1: vec4, v2: vec4): boolean
+  return (v1.x == v2.x) and (v1.y == v2.y) and (v1.z == v2.z) and (v1.w == v2.w)
+end
+
+function vec4.__add(v1: vec4, v2: vec4): vec4
+  return (@vec4) {
+    x = v1.x + v2.x,
+    y = v1.y + v2.y,
+    z = v1.z + v2.z,
+    w = v1.w + v2.w
+  }
+end
+
+function vec4.__sub(v1: vec4, v2: vec4): vec4
+  return (@vec4) {
+    x = v1.x - v2.x,
+    y = v1.y - v2.y,
+    z = v1.z - v2.z,
+    w = v1.w - v2.w
+  }
+end
+
+function vec4.__mul(v1: vec4, v2: vec4): vec4
+  return (@vec4) {
+    x = v1.x * v2.x,
+    y = v1.y * v2.y,
+    z = v1.z * v2.z,
+    w = v1.w * v2.w
+  }
+end
+
+function vec4.__div(v1: vec4, v2: vec4): vec4
+  return (@vec4) {
+    x = v1.x / v2.x,
+    y = v1.y / v2.y,
+    z = v1.z / v2.z,
+    w = v1.w / v2.w
+  }
+end
+
+function vec4.__idiv(v1: vec4, v2: vec4): vec4
+  return (@vec4) {
+    x = v1.x // v2.x,
+    y = v1.y // v2.y,
+    z = v1.z // v2.z,
+    w = v1.w // v2.w
+  }
+end
+
+function vec4.__tdiv(v1: vec4, v2: vec4): vec4
+  return (@vec4) {
+    x = v1.x /// v2.x,
+    y = v1.y /// v2.y,
+    z = v1.z /// v2.z,
+    w = v1.w /// v2.w
+  }
+end
+
+function vec4.__mod(v1: vec4, v2: vec4): vec4
+  return (@vec4) {
+    x = v1.x % v2.x,
+    y = v1.y % v2.y,
+    z = v1.z % v2.z,
+    w = v1.w % v2.w
+  }
+end
+
+function vec4.__tmod(v1: vec4, v2: vec4): vec4
+  return (@vec4) {
+    x = v1.x %%% v2.x,
+    y = v1.y %%% v2.y,
+    z = v1.z %%% v2.z,
+    w = v1.w %%% v2.w
+  }
+end
+
+function vec4.__pow(v: vec4, n: number): vec4
+  return (@vec4) {
+    x = v.x ^ n,
+    y = v.y ^ n,
+    z = v.z ^ n,
+    w = v.w ^ n
+  }
+end
+
+function vec4:__unm(): vec4
+  return (@vec4) {
+    x = -self.x,
+    y = -self.y,
+    z = -self.z,
+    w = -self.w
+  }
+end
+
+function vec4:__len(): number
+  return math.sqrt((self.x * self.x) + (self.y * self.y) + (self.z * self.z) + (self.w * self.w))
+end
+
+function vec4:__tostring(): string
+  return "vec4(" .. self.x .. ", " .. self.y .. ", " .. self.z .. ", " .. self.w .. ")"
+end
+
+--------------------------------------------------------------------
+------------------------- module: meta (quat) ----------------------
+--------------------------------------------------------------------
+function quat.__index(q: quat, i: uinteger): number
+  return q.data[i]
+end
+
+function quat.__atindex(q: quat, i: uinteger): number
+  return q.data[i]
+end
+
+function quat.__lt(q1: quat, q2: quat): boolean
+  return (q1[0] < q2[0]) and (q1[1] < q2[1]) and (q1[2] < q2[2]) and (q1[3] < q2[3])
+end
+
+function quat.__le(q1: quat, q2: quat): boolean
+  return (q1[0] <= q2[0]) and (q1[1] <= q2[1]) and (q1[2] <= q2[2]) and (q1[3] <= q2[3])
+end
+
+function quat.__eq(q1: quat, q2: quat): boolean
+  return (q1[0] == q2[0]) and (q1[1] == q2[1]) and (q1[2] == q2[2]) and (q1[3] == q2[3])
+end
+
+function quat.__add(q1: quat, q2: quat): quat
+  return mathkit.quat.create({
+    q1[0] + q2[0],
+    q1[1] + q2[1],
+    q1[2] + q2[2],
+    q1[3] + q2[3]
+  })
+end
+
+function quat.__sub(q1: quat, q2: quat): quat
+  return mathkit.quat.create({
+    q1[0] - q2[0],
+    q1[1] - q2[1],
+    q1[2] - q2[2],
+    q1[3] - q2[3]
+  })
+end
+
+function quat.__mul(q1: quat, q2: quat): quat
+  return mathkit.quat.create({
+    q1[0] * q2[3] + q1[3] * q2[0] + q1[1] * q2[2] - q1[2] * q2[1],
+    q1[1] * q2[3] + q1[3] * q2[1] + q1[2] * q2[0] - q1[0] * q2[2],
+    q1[2] * q2[3] + q1[3] * q2[2] + q1[0] * q2[1] - q1[1] * q2[0],
+    q1[3] * q2[3] - q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2]
+  })
+end
+
+function quat.__div(q1: quat, q2: quat): quat
+  return mathkit.quat.create({
+    q1[0] / q2[0],
+    q1[1] / q2[1],
+    q1[2] / q2[2],
+    q1[3] / q2[3]
+  })
+end
+
+function quat.__idiv(q1: quat, q2: quat): quat
+  return mathkit.quat.create({
+    q1[0] // q2[0],
+    q1[1] // q2[1],
+    q1[2] // q2[2],
+    q1[3] // q2[3]
+  })
+end
+
+function quat.__tdiv(q1: quat, q2: quat): quat
+  return mathkit.quat.create({
+    q1[0] /// q2[0],
+    q1[1] /// q2[1],
+    q1[2] /// q2[2],
+    q1[3] /// q2[3]
+  })
+end
+
+function quat.__mod(q1: quat, q2: quat): quat
+  return mathkit.quat.create({
+    q1[0] % q2[0],
+    q1[1] % q2[1],
+    q1[2] % q2[2],
+    q1[3] % q2[3]
+  })
+end
+
+function quat.__tmod(q1: quat, q2: quat): quat
+  return mathkit.quat.create({
+    q1[0] %%% q2[0],
+    q1[1] %%% q2[1],
+    q1[2] %%% q2[2],
+    q1[3] %%% q2[3]
+  })
+end
+
+function quat:__unm(): quat
+  return mathkit.quat.create({ -self[0], -self[1], -self[2], -self[3] })
+end
+
+function quat:__len(): number
+  return math.sqrt((self[0] * self[0]) + (self[1] * self[1]) + (self[2] * self[2]) + (self[3] * self[3]))
+end
+
+function quat:__tostring(): string
+  return "quat(" .. self[0] .. ", " .. self[1] .. ", " .. self[2] .. ", " .. self[3] .. ")"
+end
+
+--------------------------------------------------------------------
+------------------------ module: meta (quat2) ----------------------
+--------------------------------------------------------------------
+function quat2.__index(q: quat2, i: uinteger): number
+  return q.data[i]
+end
+
+function quat2.__atindex(q: quat2, i: uinteger): number
+  return q.data[i]
+end
+
+function quat2.__lt(q1: quat2, q2: quat2): boolean
+  return (q1[0] < q2[0]) and
+         (q1[1] < q2[1]) and
+         (q1[2] < q2[2]) and
+         (q1[3] < q2[3]) and
+         (q1[4] < q2[4]) and
+         (q1[5] < q2[5]) and
+         (q1[6] < q2[6]) and
+         (q1[7] < q2[7])
+end
+
+function quat2.__le(q1: quat2, q2: quat2): boolean
+  return (q1[0] <= q2[0]) and
+         (q1[1] <= q2[1]) and
+         (q1[2] <= q2[2]) and
+         (q1[3] <= q2[3]) and
+         (q1[4] <= q2[4]) and
+         (q1[5] <= q2[5]) and
+         (q1[6] <= q2[6]) and
+         (q1[7] <= q2[7])
+end
+
+function quat2.__eq(q1: quat2, q2: quat2): boolean
+  return (q1[0] == q2[0]) and
+         (q1[1] == q2[1]) and
+         (q1[2] == q2[2]) and
+         (q1[3] == q2[3]) and
+         (q1[4] == q2[4]) and
+         (q1[5] == q2[5]) and
+         (q1[6] == q2[6]) and
+         (q1[7] == q2[7])
+end
+
+function quat2.__add(q1: quat2, q2: quat2): quat2
+  return mathkit.quat2.create({
+    q1[0] + q2[0],
+    q1[1] + q2[1],
+    q1[2] + q2[2],
+    q1[3] + q2[3],
+    q1[4] + q2[4],
+    q1[5] + q2[5],
+    q1[6] + q2[6],
+    q1[7] + q2[7]
+  })
+end
+
+function quat2.__sub(q1: quat2, q2: quat2): quat2
+  return mathkit.quat2.create({
+    q1[0] - q2[0],
+    q1[1] - q2[1],
+    q1[2] - q2[2],
+    q1[3] - q2[3],
+    q1[4] - q2[4],
+    q1[5] - q2[5],
+    q1[6] - q2[6],
+    q1[7] - q2[7]
+  })
+end
+
+function quat2.__mul(q1: quat2, q2: quat2): quat2
+  return mathkit.quat2.create({
+    q1[0] * q2[3] + q1[3] * q2[0] + q1[1] * q2[2] - q1[2] * q2[1],
+    q1[1] * q2[3] + q1[3] * q2[1] + q1[2] * q2[0] - q1[0] * q2[2],
+    q1[2] * q2[3] + q1[3] * q2[2] + q1[0] * q2[1] - q1[1] * q2[0],
+    q1[3] * q2[3] - q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2],
+    
+    q1[0] * q2[7] + q1[3] * q2[4] + q1[1] * q2[6] - q1[2] * q2[5] +
+    q1[4] * q2[3] + q1[7] * q2[0] + q1[5] * q2[2] - q1[7] * q2[1],
+    
+    q1[1] * q2[7] + q1[3] * q2[5] + q1[2] * q2[4] - q1[0] * q2[6] +
+    q1[5] * q2[3] + q1[7] * q2[1] + q1[6] * q2[0] - q1[4] * q2[3],
+    
+    q1[2] * q2[7] + q1[3] * q2[6] + q1[0] * q2[5] - q1[1] * q2[4] +
+    q1[6] * q2[3] + q1[7] * q2[2] + q1[4] * q2[1] - q1[5] * q2[0],
+    
+    q1[3] * q2[7] - q1[0] * q2[4] - q1[1] * q2[5] - q1[2] * q2[6] +
+    q1[7] * q2[3] - q1[4] * q2[0] - q1[5] * q2[1] - q1[6] * q2[2]    
+  })
+end
+
+function quat2.__div(q1: quat2, q2: quat2): quat2
+  return mathkit.quat2.create({
+    q1[0] / q2[0],
+    q1[1] / q2[1],
+    q1[2] / q2[2],
+    q1[3] / q2[3],
+    q1[4] / q2[4],
+    q1[5] / q2[5],
+    q1[6] / q2[6],
+    q1[7] / q2[7]
+  })
+end
+
+function quat2.__idiv(q1: quat2, q2: quat2): quat2
+  return mathkit.quat2.create({
+    q1[0] // q2[0],
+    q1[1] // q2[1],
+    q1[2] // q2[2],
+    q1[3] // q2[3],
+    q1[4] // q2[4],
+    q1[5] // q2[5],
+    q1[6] // q2[6],
+    q1[7] // q2[7]
+  })
+end
+
+function quat2.__tdiv(q1: quat2, q2: quat2): quat2
+  return mathkit.quat2.create({
+    q1[0] /// q2[0],
+    q1[1] /// q2[1],
+    q1[2] /// q2[2],
+    q1[3] /// q2[3],
+    q1[4] /// q2[4],
+    q1[5] /// q2[5],
+    q1[6] /// q2[6],
+    q1[7] /// q2[7]
+  })
+end
+
+function quat2.__mod(q1: quat2, q2: quat2): quat2
+  return mathkit.quat2.create({
+    q1[0] % q2[0],
+    q1[1] % q2[1],
+    q1[2] % q2[2],
+    q1[3] % q2[3],
+    q1[4] % q2[4],
+    q1[5] % q2[5],
+    q1[6] % q2[6],
+    q1[7] % q2[7]
+  })
+end
+
+function quat2.__tmod(q1: quat2, q2: quat2): quat2
+  return mathkit.quat2.create({
+    q1[0] %%% q2[0],
+    q1[1] %%% q2[1],
+    q1[2] %%% q2[2],
+    q1[3] %%% q2[3],
+    q1[4] %%% q2[4],
+    q1[5] %%% q2[5],
+    q1[6] %%% q2[6],
+    q1[7] %%% q2[7]
+  })
+end
+
+function quat2.__pow(q: quat2, n: number): quat2
+  return mathkit.quat2.create({
+    q[0] ^ n,
+    q[1] ^ n,
+    q[2] ^ n,
+    q[3] ^ n,
+    q[4] ^ n,
+    q[5] ^ n,
+    q[6] ^ n,
+    q[7] ^ n
+  })
+end
+
+function quat2:__unm(): quat2
+  return mathkit.quat2.create({ -self[0], -self[1], -self[2], -self[3], -self[4], -self[5], -self[6], -self[7] })
+end
+
+function quat2:__len(): number
+  return math.sqrt((self[0] * self[0]) +
+                   (self[1] * self[1]) +
+                   (self[2] * self[2]) +
+                   (self[3] * self[3]) +
+                   (self[4] * self[4]) +
+                   (self[5] * self[5]) +
+                   (self[6] * self[6]) + 
+                   (self[7] * self[7]))
+end
+
+function quat2:__tostring(): string
+  return "quat2(" .. self[0] .. ", " .. self[1] .. ", " .. self[2] .. ", " .. self[3] .. ", " .. self[4] .. ", " .. self[5] .. ", " .. self[6] .. ", " .. self[7] .. ")"
+end
+
+--------------------------------------------------------------------
+------------------------- module: meta (mat2) ----------------------
+--------------------------------------------------------------------
+function mat2.__index(m: mat2, i: uinteger): number
+  return m.data[i]
+end
+
+function mat2.__atindex(m: mat2, i: uinteger): number
+  return m.data[i]
+end
+
+function mat2.__lt(m1: mat2, m2: mat2): boolean
+  return (m1[0] < m2[0]) and (m1[1] < m2[1]) and (m1[2] < m2[2]) and (m1[3] < m2[3])
+end
+
+function mat2.__le(m1: mat2, m2: mat2): boolean
+  return (m1[0] <= m2[0]) and (m1[1] <= m2[1]) and (m1[2] <= m2[2]) and (m1[3] <= m2[3])
+end
+
+function mat2.__eq(m1: mat2, m2: mat2): boolean
+  return (m1[0] == m2[0]) and (m1[1] == m2[1]) and (m1[2] == m2[2]) and (m1[3] == m2[3]) 
+end
+
+function mat2.__add(m1: mat2, m2: mat2): mat2
+  return mathkit.mat2.create({
+    m1[0] + m2[0],
+    m1[1] + m2[1],
+    m1[2] + m2[2],
+    m1[3] + m2[3]
+  })
+end
+
+function mat2.__sub(m1: mat2, m2: mat2): mat2
+  return mathkit.mat2.create({
+    m1[0] - m2[0],
+    m1[1] - m2[1],
+    m1[2] - m2[2],
+    m1[3] - m2[3]
+  })
+end
+
+function mat2.__mul(m1: mat2, m2: mat2): mat2
+  return mathkit.mat2.create({
+    m1[0] * m2[0] + m1[2] * m2[1],
+    m1[1] * m2[0] + m1[3] * m2[1],
+    m1[0] * m2[2] + m1[2] * m2[3],
+    m1[1] * m2[2] + m1[3] * m2[3]
+  })
+end
+
+function mat2:__unm(): mat2
+  return mathkit.mat2.create({
+    -self[0],
+    -self[1],
+    -self[2],
+    -self[3]
+  })
+end
+
+function mat2:__tostring(): string
+  return "mat2(" .. self[0] .. ", " .. self[1] .. ", " .. self[2] .. ", " .. self[3] .. ")"
+end
+
+--------------------------------------------------------------------
+------------------------ module: meta (mat2d) ----------------------
+--------------------------------------------------------------------
+function mat2d.__index(m: mat2d, i: uinteger): number
+  return m.data[i]
+end
+
+function mat2d.__atindex(m: mat2d, i: uinteger): number
+  return m.data[i]
+end
+
+function mat2d.__lt(m1: mat2d, m2: mat2d): boolean
+  return (m1[0] < m2[0]) and (m1[1] < m2[1]) and (m1[2] < m2[2]) and (m1[3] < m2[3]) and (m1[4] < m2[4]) and (m1[5] < m2[5])
+end
+
+function mat2d.__le(m1: mat2d, m2: mat2d): boolean
+  return (m1[0] <= m2[0]) and (m1[1] <= m2[1]) and (m1[2] <= m2[2]) and (m1[3] <= m2[3]) and (m1[4] <= m2[4]) and (m1[5] <= m2[5])
+end
+
+function mat2d.__eq(m1: mat2d, m2: mat2d): boolean
+  return (m1[0] == m2[0]) and (m1[1] == m2[1]) and (m1[2] == m2[2]) and (m1[3] == m2[3]) and (m1[4] == m2[4]) and (m1[5] == m2[5]) 
+end
+
+function mat2d.__add(m1: mat2d, m2: mat2d): mat2d
+  return mathkit.mat2d.create({
+    m1[0] + m2[0],
+    m1[1] + m2[1],
+    m1[2] + m2[2],
+    m1[3] + m2[3],
+    m1[4] + m2[4],
+    m1[5] + m2[5]
+  })
+end
+
+function mat2d.__sub(m1: mat2d, m2: mat2d): mat2d
+  return mathkit.mat2d.create({
+    m1[0] - m2[0],
+    m1[1] - m2[1],
+    m1[2] - m2[2],
+    m1[3] - m2[3],
+    m1[4] - m2[4],
+    m1[5] - m2[5]
+  })
+end
+
+function mat2d.__mul(m1: mat2d, m2: mat2d): mat2d
+  return mathkit.mat2d.create({
+    m1[0] * m2[0] + m1[2] * m2[1],
+    m1[1] * m2[0] + m1[3] * m2[1],
+    m1[0] * m2[2] + m1[2] * m2[3],
+    m1[1] * m2[2] + m1[3] * m2[3],
+    m1[0] * m2[4] + m1[2] * m2[5] + m1[4],
+    m1[1] * m2[4] + m1[3] * m2[5] + m1[5]
+  })
+end
+
+function mat2d:__unm(): mat2d
+  return mathkit.mat2d.create({
+    -self[0],
+    -self[1],
+    -self[2],
+    -self[3],
+    -self[4],
+    -self[5]
+  })
+end
+
+function mat2d:__tostring(): string
+  return "mat2d(" .. self[0] .. ", " .. self[1] .. ", " .. self[2] .. ", " .. self[3] .. ", " .. self[4] .. ", " .. self[5] .. ")"
+end
+
+--------------------------------------------------------------------
+------------------------- module: meta (mat3) ----------------------
+--------------------------------------------------------------------
+function mat3.__index(m: mat3, i: uinteger): number
+  return m.data[i]
+end
+
+function mat3.__atindex(m: mat3, i: uinteger): number
+  return m.data[i]
+end
+
+function mat3.__lt(m1: mat3, m2: mat3): boolean
+  return (m1[0] < m2[0]) and (m1[1] < m2[1]) and (m1[2] < m2[2]) and (m1[3] < m2[3]) and (m1[4] < m2[4]) and (m1[5] < m2[5]) and (m1[6] < m2[6]) and (m1[7] < m2[7]) and (m1[8] < m2[8])
+end
+
+function mat3.__le(m1: mat3, m2: mat3): boolean
+  return (m1[0] <= m2[0]) and (m1[1] <= m2[1]) and (m1[2] <= m2[2]) and (m1[3] <= m2[3]) and (m1[4] <= m2[4]) and (m1[5] <= m2[5]) and (m1[6] <= m2[6]) and (m1[7] <= m2[7]) and (m1[8] <= m2[8])
+end
+
+function mat3.__eq(m1: mat3, m2: mat3): boolean
+  return (m1[0] == m2[0]) and (m1[1] == m2[1]) and (m1[2] == m2[2]) and (m1[3] == m2[3]) and (m1[4] == m2[4]) and (m1[5] == m2[5]) and (m1[6] == m2[6]) and (m1[7] == m2[7]) and (m1[8] == m2[8])
+end
+
+function mat3.__add(m1: mat3, m2: mat3): mat3
+  return mathkit.mat3.create({
+    m1[0] + m2[0],
+    m1[1] + m2[1],
+    m1[2] + m2[2],
+    m1[3] + m2[3],
+    m1[4] + m2[4],
+    m1[5] + m2[5],
+    m1[6] + m2[6],
+    m1[7] + m2[7],
+    m1[8] + m2[8]
+  })
+end
+
+function mat3.__sub(m1: mat3, m2: mat3): mat3
+  return mathkit.mat3.create({
+    m1[0] - m2[0],
+    m1[1] - m2[1],
+    m1[2] - m2[2],
+    m1[3] - m2[3],
+    m1[4] - m2[4],
+    m1[5] - m2[5],
+    m1[6] - m2[6],
+    m1[7] - m2[7],
+    m1[8] - m2[8]
+  })
+end
+
+function mat3.__mul(m1: mat3, m2: mat3): mat3
+  return mathkit.mat3.create({
+    m2[0] * m1[0] + m2[1] * m1[3] + m2[2] * m1[6],
+    m2[0] * m1[1] + m2[1] * m1[4] + m2[2] * m1[7],
+    m2[0] * m1[2] + m2[1] * m1[5] + m2[2] * m1[8],
+    m2[3] * m1[0] + m2[4] * m1[3] + m2[5] * m1[6],
+    m2[3] * m1[1] + m2[4] * m1[4] + m2[5] * m1[7],
+    m2[3] * m1[2] + m2[4] * m1[5] + m2[5] * m1[8],
+    m2[6] * m1[0] + m2[7] * m1[3] + m2[8] * m1[6],
+    m2[6] * m1[1] + m2[7] * m1[4] + m2[8] * m1[7],
+    m2[6] * m1[2] + m2[7] * m1[5] + m2[8] * m1[8]
+  })
+end
+
+function mat3:__unm(): mat3
+  return mathkit.mat3.create({
+    -self[0],
+    -self[1],
+    -self[2],
+    -self[3],
+    -self[4],
+    -self[5],
+    -self[6],
+    -self[7],
+    -self[8]
+  })
+end
+
+--------------------------------------------------------------------
+------------------------- module: meta (mat4) ----------------------
+--------------------------------------------------------------------
+function mat4.__index(m: mat4, i: uinteger): number
+  return m.data[i]
+end
+
+function mat4.__atindex(m: mat4, i: uinteger): number
+  return m.data[i]
+end
+
+function mat4.__lt(m1: mat4, m2: mat4): boolean
+  return (m1[0] < m2[0]) and (m1[1] < m2[1]) and (m1[2] < m2[2]) and (m1[3] < m2[3]) and (m1[4] < m2[4]) and (m1[5] < m2[5]) and (m1[6] < m2[6]) and (m1[7] < m2[7]) and (m1[8] < m2[8]) and (m1[9] < m2[9]) and (m1[10] < m2[10]) and (m1[11] < m2[11]) and (m1[12] < m2[12]) and (m1[13] < m2[13]) and (m1[14] < m2[14]) and (m1[15] < m2[15])
+end
+
+function mat4.__le(m1: mat4, m2: mat4): boolean
+  return (m1[0] <= m2[0]) and (m1[1] <= m2[1]) and (m1[2] <= m2[2]) and (m1[3] <= m2[3]) and (m1[4] <= m2[4]) and (m1[5] <= m2[5]) and (m1[6] <= m2[6]) and (m1[7] <= m2[7]) and (m1[8] <= m2[8]) and (m1[9] <= m2[9]) and (m1[10] <= m2[10]) and (m1[11] <= m2[11]) and (m1[12] <= m2[12]) and (m1[13] <= m2[13]) and (m1[14] <= m2[14]) and (m1[15] <= m2[15])
+end
+
+function mat4.__eq(m1: mat4, m2: mat4): boolean
+  return (m1[0] == m2[0]) and (m1[1] == m2[1]) and (m1[2] == m2[2]) and (m1[3] == m2[3]) and (m1[4] == m2[4]) and (m1[5] == m2[5]) and (m1[6] == m2[6]) and (m1[7] == m2[7]) and (m1[8] == m2[8]) and (m1[9] == m2[9]) and (m1[10] == m2[10]) and (m1[11] == m2[11]) and (m1[12] == m2[12]) and (m1[13] == m2[13]) and (m1[14] == m2[14]) and (m1[15] == m2[15])
+end
+
+function mat4.__add(m1: mat4, m2: mat4): mat4
+  return mathkit.mat4.create({
+    m1[0] + m2[0],
+    m1[1] + m2[1],
+    m1[2] + m2[2],
+    m1[3] + m2[3],
+    m1[4] + m2[4],
+    m1[5] + m2[5],
+    m1[6] + m2[6],
+    m1[7] + m2[7],
+    m1[8] + m2[8],
+    m1[9] + m2[9],
+    m1[10] + m2[10],
+    m1[11] + m2[11],
+    m1[12] + m2[12],
+    m1[13] + m2[13],
+    m1[14] + m2[14],
+    m1[15] + m2[15]
+  })
+end
+
+function mat4.__sub(m1: mat4, m2: mat4): mat4
+  return mathkit.mat4.create({
+    m1[0] - m2[0],
+    m1[1] - m2[1],
+    m1[2] - m2[2],
+    m1[3] - m2[3],
+    m1[4] - m2[4],
+    m1[5] - m2[5],
+    m1[6] - m2[6],
+    m1[7] - m2[7],
+    m1[8] - m2[8],
+    m1[9] - m2[9],
+    m1[10] - m2[10],
+    m1[11] - m2[11],
+    m1[12] - m2[12],
+    m1[13] - m2[13],
+    m1[14] - m2[14],
+    m1[15] - m2[15]
+  })
+end
+
+function mat4.__mul(m1: mat4, m2: mat4): mat4
+  return mathkit.mat4.create({
+    m2[0] * m1[0] + m2[1] * m1[4] + m2[2] * m1[8] + m2[3] * m1[12],
+    m2[0] * m1[1] + m2[1] * m1[5] + m2[2] * m1[9] + m2[3] * m1[13],
+    m2[0] * m1[2] + m2[1] * m1[6] + m2[2] * m1[10] + m2[3] * m1[14],
+    m2[0] * m1[3] + m2[1] * m1[7] + m2[2] * m1[11] + m2[3] * m1[15],
+    m2[4] * m1[0] + m2[5] * m1[4] + m2[6] * m1[8] + m2[7] * m1[12],
+    m2[4] * m1[1] + m2[5] * m1[5] + m2[6] * m1[9] + m2[7] * m1[13],
+    m2[4] * m1[2] + m2[5] * m1[6] + m2[6] * m1[10] + m2[7] * m1[14],
+    m2[4] * m1[3] + m2[5] * m1[7] + m2[6] * m1[11] + m2[7] * m1[15],
+    m2[8] * m1[0] + m2[9] * m1[4] + m2[10] * m1[8] + m2[11] * m1[12],
+    m2[8] * m1[1] + m2[9] * m1[5] + m2[10] * m1[9] + m2[11] * m1[13],
+    m2[8] * m1[2] + m2[9] * m1[6] + m2[10] * m1[10] + m2[11] * m1[14],
+    m2[8] * m1[3] + m2[9] * m1[7] + m2[10] * m1[11] + m2[11] * m1[15],
+    m2[12] * m1[0] + m2[13] * m1[4] + m2[14] * m1[8] + m2[15] * m1[12],
+    m2[12] * m1[1] + m2[13] * m1[5] + m2[14] * m1[9] + m2[15] * m1[13],
+    m2[12] * m1[2] + m2[13] * m1[6] + m2[14] * m1[10] + m2[15] * m1[14],
+    m2[12] * m1[3] + m2[13] * m1[7] + m2[14] * m1[11] + m2[15] * m1[15]
+  })
+end
+
+function mat4:__unm(): mat4
+  return mathkit.mat4.create({
+    -self[0],
+    -self[1],
+    -self[2],
+    -self[3],
+    -self[4],
+    -self[5],
+    -self[6],
+    -self[7],
+    -self[8],
+    -self[9],
+    -self[10],
+    -self[11],
+    -self[12],
+    -self[13],
+    -self[14],
+    -self[15]
+  })
+end
+
+function mat4:__tostring(): string
+  return "mat4(" .. self[0] .. ", " .. self[1] .. ", " .. self[2] .. ", " .. self[3] .. ", " .. self[4] .. ", " .. self[5] .. ", " .. self[6] .. ", " .. self[7] .. ", " .. self[8] .. ", " .. self[9] .. ", " .. self[10] .. ", " .. self[11] .. ", " .. self[12] .. ", " .. self[13] .. ", " .. self[14] .. ", " .. self[15] .. ")"
+end
+
+--------------------------------------------------------------------
+--------------------------- module: vec2 ---------------------------
+--------------------------------------------------------------------
+function mathkit.vec2.zero(): vec2
+  return (@vec2) { x = 0, y = 0 }
+end
+
+function mathkit.vec2.one(): vec2
+  return (@vec2) { x = 1, y = 1 }
+end
+
+function mathkit.vec2.add(v1: vec2, v2: vec2): vec2
+  return (@vec2) { x = v1.x + v2.x, y = v1.y + v2.y }
+end
+
+function mathkit.vec2.addval(v: vec2, n: number): vec2
+  return (@vec2) { x = v.x + n, y = v.y + n }
+end
+
+function mathkit.vec2.sub(v1: vec2, v2: vec2): vec2
+  return (@vec2) { x = v1.x - v2.x, y = v1.y - v2.y }
+end
+
+function mathkit.vec2.subval(v: vec2, n: number): vec2
+  return (@vec2) { x = v.x - n, y = v.y - n }
+end
+
+function mathkit.vec2.mul(v1: vec2, v2: vec2): vec2
+  return (@vec2) { x = v1.x * v2.x, y = v1.y * v2.y }
+end
+
+function mathkit.vec2.div(v1: vec2, v2: vec2): vec2
+  return (@vec2) { x = v1.x / v2.x, y = v1.y / v2.y }
+end
+
+function mathkit.vec2.scale(v: vec2, scalar: number): vec2
+  return (@vec2) { x = v.x * scalar, y = v.y * scalar }
+end
+
+function mathkit.vec2.scale_and_add(v1: vec2, v2: vec2, scalar: number): vec2
+  return (@vec2) {
+    x = (v1.x + v2.x) * scalar,
+    y = (v1.y + v2.y) * scalar
+  }
+end
+
+function mathkit.vec2.dot(v1: vec2, v2: vec2): number
+  return (v1.x * v2.x) + (v1.y * v2.y)
+end
+
+function mathkit.vec2.cross(v1: vec2, v2: vec2): vec3
+  return (@vec3) {
+    x = 0,
+    y = 0,
+    z = (v1.x * v2.y) - (v1.y * v2.x)
+  }
+end
+
+function mathkit.vec2.rand(scale: number): vec2
+  local r: number = math.random() * 2 * 3.14
+  
+  return (@vec2) {
+    x = math.cos(r) * scale,
+    y = math.sin(r) * scale
+  }
+end
+
+function mathkit.vec2.neg(v: vec2): vec2
+  return (@vec2) { x = -v.x, y = -v.y }
+end
+
+function mathkit.vec2.inv(v: vec2): vec2
+  return (@vec2) {
+    x = 1 / v.x,
+    y = 1 / v.y
+  }
+end
+
+function mathkit.vec2.abs(v: vec2): vec2
+  local res: vec2 = (@vec2) { x = v.x, y = v.y }
+  
+  if res.x < 0 then
+    res.x = -res.x
+  end
+  
+  if res.y < 0 then
+    res.y = -res.y
+  end
+  
+  return res
+end
+
+function mathkit.vec2.ceil(v: vec2): vec2
+  return (@vec2) { x = math.ceil(v.x), y = math.ceil(v.y) }
+end
+
+function mathkit.vec2.round(v: vec2): vec2
+  return (@vec2) { x = math.round(v.x), y = math.round(v.y) }
+end
+
+function mathkit.vec2.floor(v: vec2): vec2
+  return (@vec2) { x = math.floor(v.x), y = math.floor(v.y) }
+end
+
+function mathkit.vec2.min(v1: vec2, v2: vec2): vec2
+  local res_x: number = (v1.x < v2.x and v1.x or v2.x)
+  local res_y: number = (v1.y < v2.y and v1.y or v2.y)
+  
+  return (@vec2) { x = res_x, y = res_y }
+end
+
+function mathkit.vec2.max(v1: vec2, v2: vec2): vec2
+  local res_x: number = (v1.x > v2.x and v1.x or v2.x)
+  local res_y: number = (v1.y > v2.y and v1.y or v2.y)
+  
+  return (@vec2) { x = res_x, y = res_y }
+end
+
+function mathkit.vec2.len(v: vec2): number
+  return math.sqrt((v.x * v.x) + (v.y * v.y))
+end
+
+function mathkit.vec2.sqrlen(v: vec2): number
+  return (v.x * v.x) + (v.y * v.y)
+end
+
+function mathkit.vec2.dist(v1: vec2, v2: vec2): number
+  return math.sqrt((v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y))
+end
+
+function mathkit.vec2.sqrdist(v1: vec2, v2: vec2): number
+  return (v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y)
+end
+
+function mathkit.vec2.angle(v1: vec2, v2: vec2): number
+  return math.atan2(v2.y - v1.y, v2.x - v1.x) * (180 / 3.14)
+end
+
+function mathkit.vec2.norm(v: vec2): vec2
+  local len: number = mathkit.vec2.len(v)
+  
+  if len <= 0 then
+    return v
+  else
+    local res: vec2 = mathkit.vec2.scale(v, 1 / len)
+    return res
+  end
+end
+
+function mathkit.vec2.lerp(v1: vec2, v2: vec2, amount: number): vec2
+  return (@vec2) {
+    x = v1.x + amount * (v2.x - v1.x),
+    y = v1.y + amount * (v2.y - v1.y)
+  }
+end
+
+function mathkit.vec2.reflect(v: vec2, normal: vec2): vec2
+  local dotproc: number = mathkit.vec2.dot(v, normal)
+  
+  return (@vec2) {
+    x = v.x - (2 * normal.x) * dotproc,
+    y = v.y - (2 * normal.y) * dotproc
+  }
+end
+
+function mathkit.vec2.rot(v: vec2, degs: number): vec2
+  local rads: number = degs * (3.14 / 180)
+  
+  return (@vec2) {
+    x = v.x * math.cos(rads) - v.y * math.sin(rads),
+    y = v.x * math.sin(rads) - v.y * math.cos(rads)
+  }
+end
+
+function mathkit.vec2.towards(v: vec2, target: vec2, maxdist: number): vec2
+  local dx: number = target.x - v.x
+  local dy: number = target.y - v.y
+  local val: number = (dx * dx) + (dy * dy)
+  local dist: number = math.sqrt(val)
+  
+  if ((val == 0) or ((maxdist >= 0) and (val <= maxdist * maxdist))) then
+    return target
+  end
+  
+  return (@vec2) {
+    x = v.x + dx / dist * maxdist,
+    y = v.y + dy / dist * maxdist
+  }
+end
+
+function mathkit.vec2.tostring(v: vec2): string
+  return "vec2(" .. v.x .. ", " .. v.y .. ")"
+end
+
+function mathkit.vec2.equ(v1: vec2, v2: vec2): boolean
+  return (v1.x == v2.x) and (v1.y == v2.y)
+end
+
+function mathkit.vec2.transform_mat2(v: vec2, m: mat2): vec2
+  return (@vec2) {
+    x = m[0] * v.x + m[2] * v.y,
+    y = m[1] * v.x + m[3] * v.y
+  }
+end
+
+function mathkit.vec2.transform_mat2d(v: vec2, m: mat2d): vec2
+  return (@vec2) {
+    x = m[0] * v.x + m[2] * v.y + m[4],
+    y = m[1] * v.x + m[3] * v.y + m[5]
+  }
+end
+
+function mathkit.vec2.transform_mat3(v: vec2, m: mat3): vec2
+  return (@vec2) {
+    x = m[0] * v.x + m[3] * v.y + m[6],
+    y = m[1] * v.x + m[4] * v.y + m[7]
+  }
+end
+
+function mathkit.vec2.transform_mat4(v: vec2, m: mat4): vec2
+  return (@vec2) {
+    x = m[0] * v.x + m[4] * v.y + m[12],
+    y = m[1] * v.x + m[5] * v.y + m[13]
+  }
+end
+
+--------------------------------------------------------------------
+--------------------------- module: vec3 ---------------------------
+--------------------------------------------------------------------
+function mathkit.vec3.zero(): vec3
+  return (@vec3) { x = 0, y = 0, z = 0 }
+end
+
+function mathkit.vec3.one(): vec3
+  return (@vec3) { x = 1, y = 1, z = 1 }
+end
+
+function mathkit.vec3.add(v1: vec3, v2: vec3): vec3
+  return (@vec3) {
+    x = v1.x + v2.x,
+    y = v1.y + v2.y,
+    z = v1.z + v2.z
+  }
+end
+
+function mathkit.vec3.addval(v: vec3, n: number): vec3
+  return (@vec3) {
+    x = v.x + n,
+    y = v.y + n,
+    z = v.z + n
+  }
+end
+
+function mathkit.vec3.sub(v1: vec3, v2: vec3): vec3
+  return (@vec3) {
+    x = v1.x - v2.x,
+    y = v1.y - v2.y,
+    z = v1.z - v2.z
+  }
+end
+
+function mathkit.vec3.subval(v: vec3, n: number): vec3
+  return (@vec3) {
+    x = v.x - n,
+    y = v.y - n,
+    z = v.z - n
+  }
+end
+
+function mathkit.vec3.mul(v1: vec3, v2: vec3): vec3
+  return (@vec3) {
+    x = v1.x * v2.x,
+    y = v1.y * v2.y,
+    z = v1.z * v2.z
+  }
+end
+
+function mathkit.vec3.div(v1: vec3, v2: vec3): vec3
+  return (@vec3) {
+    x = v1.x / v2.x,
+    y = v1.y / v2.y,
+    z = v1.z / v2.z
+  }
+end
+
+function mathkit.vec3.scale(v: vec3, scalar: number): vec3
+  return (@vec3) {
+    x = v.x * scalar,
+    y = v.y * scalar,
+    z = v.z * scalar
+  }
+end
+
+function mathkit.vec3.scale_and_add(v1: vec3, v2: vec3, scalar: number): vec3
+  return (@vec3) {
+    x = (v1.x + v2.x) * scalar,
+    y = (v1.y + v2.y) * scalar,
+    z = (v1.z + v2.z) * scalar
+  }
+end
+
+function mathkit.vec3.dot(v1: vec3, v2: vec3): number
+  return (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z)
+end
+
+function mathkit.vec3.cross(v1: vec3, v2: vec3): vec3
+  return (@vec3) {
+    x = (v1.y * v2.z) - (v1.z * v2.y),
+    y = (v1.z * v2.x) - (v1.x * v2.z),
+    z = (v1.x * v2.y) - (v1.y * v2.x)
+  }
+end
+
+function mathkit.vec3.rand(scale: number): vec3
+  local r: number = math.random() * 2 * 3.14
+  local z: number = math.random() * 2 - 1
+  local zscale: number = math.sqrt(1 - z * z) * scale
+
+  return (@vec3) {
+    x = math.cos(r) * zscale,
+    y = math.sin(r) * zscale,
+    z = z * scale
+  }
+end
+
+function mathkit.vec3.neg(v: vec3): vec3
+  return (@vec3) { x = -v.x, y = -v.y, z = -v.z }
+end
+
+function mathkit.vec3.inv(v: vec3): vec3
+  return (@vec3) {
+    x = 1 / v.x,
+    y = 1 / v.y,
+    z = 1 / v.z
+  }
+end
+
+function mathkit.vec3.abs(v: vec3): vec3
+  local res: vec3 = (@vec3) { x = v.x, y = v.y, z = v.z }
+  
+  if res.x < 0 then
+    res.x = -res.x
+  end
+  
+  if res.y < 0 then
+    res.y = -res.y
+  end
+  
+  if res.z < 0 then
+    res.z = -res.z
+  end
+  
+  return res
+end
+
+function mathkit.vec3.ceil(v: vec3): vec3
+  return (@vec3) {
+    x = math.ceil(v.x),
+    y = math.ceil(v.y),
+    z = math.ceil(v.z)
+  }
+end
+
+function mathkit.vec3.round(v: vec3): vec3
+  return (@vec3) {
+    x = math.round(v.x),
+    y = math.round(v.y),
+    z = math.round(v.z)
+  }
+end
+
+function mathkit.vec3.floor(v: vec3): vec3
+  return (@vec3) {
+    x = math.floor(v.x),
+    y = math.floor(v.y),
+    z = math.floor(v.z)
+  }
+end
+
+function mathkit.vec3.min(v1: vec3, v2: vec3): vec3
+  local res_x: number = (v1.x < v2.x and v1.x or v2.x)
+  local res_y: number = (v1.y < v2.y and v1.y or v2.y)
+  local res_z: number = (v1.z < v2.z and v1.z or v2.z)
+  
+  return (@vec3) { x = res_x, y = res_y, z = res_z }
+end
+
+function mathkit.vec3.max(v1: vec3, v2: vec3): vec3
+  local res_x: number = (v1.x > v2.x and v1.x or v2.x)
+  local res_y: number = (v1.y > v2.y and v1.y or v2.y)
+  local res_z: number = (v1.z > v2.z and v1.z or v2.z)
+  
+  return (@vec3) { x = res_x, y = res_y, z = res_z }
+end
+
+function mathkit.vec3.len(v: vec3): number
+  return math.sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z))
+end
+
+function mathkit.vec3.sqrlen(v: vec3): number
+  return (v.x * v.x) + (v.y * v.y) + (v.z * v.z)
+end
+
+function mathkit.vec3.dist(v1: vec3, v2: vec3): number
+  return math.sqrt((v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y) + (v1.z - v2.z) * (v1.z - v2.z))
+end
+
+function mathkit.vec3.sqrdist(v1: vec3, v2: vec3): number
+  return (v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y) + (v1.z - v2.z) * (v1.z - v2.z)
+end
+
+function mathkit.vec3.angle(v1: vec3, v2: vec3): number
+  return math.acos(mathkit.vec3.dot(v1, v2) / (#v1 * #v2)) * (180 / 3.14)
+end
+
+function mathkit.vec3.norm(v: vec3): vec3
+  local len: number = math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z)
+  
+  if len == 0 then
+    len = 1
+  end
+  
+  return (@vec3) {
+    x = v.x * (1 / len),
+    y = v.y * (1 / len),
+    z = v.z * (1 / len)
+  }
+end
+
+function mathkit.vec3.ortho_norm(v1: *vec3, v2: *vec3): void
+  $v1 = mathkit.vec3.norm($v1)
+  local vn: vec3 = mathkit.vec3.norm(mathkit.vec3.cross($v1, $v2))
+  $v2 = mathkit.vec3.cross(vn, $v1)
+end
+
+function mathkit.vec3.lerp(v1: vec3, v2: vec3, amount: number): vec3
+  return (@vec3) {
+    x = v1.x + amount * (v2.x - v1.x),
+    y = v1.y + amount * (v2.y - v1.y),
+    z = v1.z + amount * (v2.z - v1.z)
+  }
+end
+
+function mathkit.vec3.reflect(v: vec3, normal: vec3): vec3
+  local dotproc: number = mathkit.vec3.dot(v, normal)
+  
+  return (@vec3) {
+    x = v.x - (2 * normal.x) * dotproc,
+    y = v.y - (2 * normal.y) * dotproc,
+    z = v.z - (2 * normal.z) * dotproc
+  }
+end
+
+function mathkit.vec3.perpendicular(v: vec3): vec3
+  local abs_x: number = v.x < 0 and -v.x or v.x
+  local abs_y: number = v.y < 0 and -v.y or v.y
+  local abs_z: number = v.z < 0 and -v.z or v.z
+  
+  local card_axis: vec3 = (@vec3) { x = 1, y = 0, z = 0 }
+  
+  if abs_y < abs_x then
+    local tmp: vec3 = (@vec3) { x = 0, y = 1, z = 0 }
+    
+    abs_x = abs_y
+    card_axis = tmp
+  end
+  
+  if abs_z < abs_x then
+    local tmp: vec3 = (@vec3) { x = 0, y = 0, z = 1 }
+    card_axis = tmp
+  end
+  
+  return mathkit.vec3.cross(v, card_axis)
+end
+
+function mathkit.vec3.hermite(a: vec3, b: vec3, c: vec3, d: vec3, t: number): vec3
+  local f1: number = t * t * (2 * t - 3) + 1
+  local f2: number = t * t * (t - 2) + t
+  local f3: number = t * t * (t - 1)
+  local f4: number = t * t * (3 - 2 * t)
+  
+  return (@vec3) {
+    x = a.x * f1 + b.x * f2 + c.x * f3 + d.x * f4,
+    y = a.y * f1 + b.y * f2 + c.y * f3 + d.y * f4,
+    z = a.z * f1 + b.z * f2 + c.z * f3 + d.z * f4
+  }
+end
+
+function mathkit.vec3.bezier(a: vec3, b: vec3, c: vec3, d: vec3, t: number): vec3
+  local f1: number = (1 - t) * (1 - t) * (1 - t)
+  local f2: number = 3 * t * (1 - t) * (1 - t)
+  local f3: number = 3 * (t * t) * (1 - t)
+  local f4: number = t * t * t
+  
+  return (@vec3) {
+    x = a.x * f1 + b.x * f2 + c.x * f3 + d.x * f4,
+    y = a.y * f1 + b.y * f2 + c.y * f3 + d.y * f4,
+    z = a.z * f1 + b.z * f2 + c.z * f3 + d.z * f4
+  }
+end
+
+function mathkit.vec3.transform(v: vec3, m: mat4): vec3
+  return (@vec3) {
+    x = m[0] * v.x + m[4] * v.y + m[8] * v.z + m[12],
+    y = m[1] * v.x + m[5] * v.y + m[9] * v.z + m[13],
+    z = m[2] * v.x + m[6] * v.y + m[10] * v.z + m[14]
+  }
+end
+
+function mathkit.vec3.rotate_by_quat(v: vec3, q: quat): vec3
+  return (@vec3) {
+    x = v.x * (q[0] * q[0] + q[3] * q[3] - q[1] * q[1] - q[2] * q[2]) + v.y * (2 * q[0] * q[1] - 2 * q[3] * q[2]) + v.z * (2 * q[0] * q[2] + 2 * q[3] * q[1]),
+    y = v.x * (2 * q[3] * q[2] + 2 * q[0] * q[1]) + v.y * (q[3] * q[3] - q[0] * q[0] + q[1] * q[1] - q[2] * q[2]) + v.z * (-2 * q[3] * q[0] + 2 * q[1] * q[2]),
+    z = v.x * (-2 * q[3] * q[1] + 2 * q[0] * q[2]) + v.y * (2 * q[3] * q[0] + 2 * q[1] * q[2]) + v.z * (q[3] * q[3] - q[0] * q[0] - q[1] * q[1] + q[2] * q[2])
+  }
+end
+
+function mathkit.vec3.rotx(v1: vec3, v2: vec3, rad: number): vec3
+  local p: vec3 = v1 - v2
+  
+  return (@vec3) {
+    x = p.x + v2.x,
+    y = (p.y * math.cos(rad) - p.z * math.sin(rad)) + v2.y,
+    z = (p.y * math.sin(rad) - p.z * math.cos(rad)) + v2.z
+  }
+end
+
+function mathkit.vec3.roty(v1: vec3, v2: vec3, rad: number): vec3
+  local p: vec3 = v1 - v2
+  
+  return (@vec3) {
+    x = (p.z * math.sin(rad) + p.x * math.cos(rad)) + v2.x,
+    y = p.y + v2.y,
+    z = (p.z * math.cos(rad) - p.x * math.sin(rad)) + v2.z
+  }
+end
+
+function mathkit.vec3.rotz(v1: vec3, v2: vec3, rad: number): vec3
+  local p: vec3 = v1 - v2
+  
+  return (@vec3) {
+    x = p.x * math.cos(rad) - p.y * math.sin(rad),
+    y = p.x * math.sin(rad) + p.y * math.cos(rad),
+    z = p.z + v2.z
+  }
+end
+
+function mathkit.vec3.barycenter(p: vec3, a: vec3, b: vec3, c: vec3): vec3
+  local v0: vec3 = b - a
+  local v1: vec3 = c - a
+  local v2: vec3 = p - a
+  local d00: number = mathkit.vec3.dot(v0, v0)
+  local d01: number = mathkit.vec3.dot(v0, v1)
+  local d11: number = mathkit.vec3.dot(v1, v1)
+  local d20: number = mathkit.vec3.dot(v2, v0)
+  local d21: number = mathkit.vec3.dot(v2, v1)
+  local denom: number = d00 * d11 - d01 * d01
+  
+  return (@vec3) {
+    x = 1 - (((d00 * d21 - d01 * d20) / denom) + ((d11 * d20 - d01 * d21) / denom)),
+    y = (d11 * d20 - d01 * d21) / denom,
+    z = (d00 * d21 - d01 * d20) / denom
+  }
+end
+
+function mathkit.vec3.tostring(v: vec3): string
+  return "vec3(" .. v.x .. ", " .. v.y .. ", " .. v.z .. ")"
+end
+
+function mathkit.vec3.equ(v1: vec3, v2: vec3): boolean
+  return (v1.x == v2.x) and (v1.y == v2.y) and (v1.z == v2.z)
+end
+
+function mathkit.vec3.transform_mat3(v: vec3, m: mat3): vec3
+  return (@vec3) {
+    x = v.x * m[0] + v.y * m[3] + v.z * m[6],
+    y = v.x * m[1] + v.y * m[4] + v.z * m[7],
+    z = v.x * m[2] + v.y * m[5] + v.z * m[8]
+  }
+end
+
+function mathkit.vec3.transform_mat4(v: vec3, m: mat4): vec3
+  local w: number = m[3] * v.x + m[7] * v.y + m[11] * v.z + m[15]
+  
+  return (@vec3) {
+    x = (m[0] * v.x + m[4] * v.y + m[8] * v.z + m[12]) / w,
+    y = (m[1] * v.x + m[5] * v.y + m[9] * v.z + m[13]) / w,
+    z = (m[2] * v.x + m[6] * v.y + m[10] * v.z + m[14]) / w
+  }
+end
+
+function mathkit.vec3.transform_quat(v: vec3, q: quat): vec3
+  local uvx: number = (q[1] * v.z - q[2] * v.y) * (q[3] * 2)
+  local uvy: number = (q[2] * v.x - q[0] * v.z) * (q[3] * 2)
+  local uvz: number = (q[0] * v.y - q[1] * v.x) * (q[3] * 2)
+  local uuvx: number = (q[1] * uvz - q[2] * uvy) * 2
+  local uuvy: number = (q[2] * uvx - q[0] * uvz) * 2
+  local uuvz: number = (q[0] * uvy - q[1] * uvx) * 2
+  
+  return (@vec3) {
+    x = v.x + uvx + uuvx,
+    y = v.y + uvy + uuvy,
+    z = v.z + uvz + uuvz
+  }
+end
+
+--------------------------------------------------------------------
+--------------------------- module: vec4 ---------------------------
+--------------------------------------------------------------------
+function mathkit.vec4.zero(): vec4
+  return (@vec4) { x = 0, y = 0, z = 0, w = 0 }
+end
+
+function mathkit.vec4.one(): vec4
+  return (@vec4) { x = 1, y = 1, z = 1, w = 1 } 
+end
+
+function mathkit.vec4.add(v1: vec4, v2: vec4): vec4
+  return (@vec4) {
+    x = v1.x + v2.x,
+    y = v1.y + v2.y,
+    z = v1.z + v2.z,
+    w = v1.w + v2.w
+  }
+end
+
+function mathkit.vec4.addval(v: vec4, n: number): vec4
+  return (@vec4) {
+    x = v.x + n,
+    y = v.y + n,
+    z = v.z + n,
+    w = v.w + n
+  }
+end
+
+function mathkit.vec4.sub(v1: vec4, v2: vec4): vec4
+  return (@vec4) {
+    x = v1.x - v2.x,
+    y = v1.y - v2.y,
+    z = v1.z - v2.z,
+    w = v1.w - v2.w
+  }
+end
+
+function mathkit.vec4.subval(v: vec4, n: number): vec4
+  return (@vec4) {
+    x = v.x - n,
+    y = v.y - n,
+    z = v.z - n,
+    w = v.w - n
+  }
+end
+
+function mathkit.vec4.mul(v1: vec4, v2: vec4): vec4
+  return (@vec4) {
+    x = v1.x * v2.x,
+    y = v1.y * v2.y,
+    z = v1.z * v2.z,
+    w = v1.w * v2.w
+  }
+end
+
+function mathkit.vec4.div(v1: vec4, v2: vec4): vec4
+  return (@vec4) {
+    x = v1.x / v2.x,
+    y = v1.y / v2.y,
+    z = v1.z / v2.z,
+    w = v1.w / v2.w
+  }
+end
+
+function mathkit.vec4.scale(v: vec4, scalar: number): vec4
+  return (@vec4) {
+    x = v.x * scalar,
+    y = v.y * scalar,
+    z = v.z * scalar,
+    w = v.w * scalar
+  }
+end
+
+function mathkit.vec4.scale_and_add(v1: vec4, v2: vec4, scalar: number): vec4
+  return (@vec4) {
+    x = (v1.x + v2.x) * scalar,
+    y = (v1.y + v2.y) * scalar,
+    z = (v1.z + v2.z) * scalar,
+    w = (v1.w + v2.w) * scalar
+  }
+end
+
+function mathkit.vec4.dot(v1: vec4, v2: vec4): number
+  return (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z) + (v1.w * v2.w)
+end
+
+function mathkit.vec4.cross(a: vec4, b: vec4, c: vec4): vec4
+  return (@vec4) {
+    x = a.y * (b.z * c.w - b.w * c.z) - a.z * (b.y * c.w - b.w * c.y) + a.w * (b.y * c.z - b.z * c.y),
+    y = -(a.x * (b.z * c.w - b.w * c.z)) + a.z * (b.x * c.w - b.w * c.x) - a.w * (b.x * c.z - b.z * c.x),
+    z = a.x * (b.y * c.w - b.w * c.y) - a.y * (b.x * c.w - b.w * c.x) + a.w * (b.x * c.y - b.y * c.x),
+    w = -(a.x * (b.y * c.z - b.z * c.y)) + a.y * (b.x * c.z - b.z * c.x) - a.z * (b.x * c.y - b.y * c.x)
+  }
+end
+
+function mathkit.vec4.rand(scale: number): vec4
+  local v1: number
+  local v2: number
+  local v3: number
+  local v4: number
+  local s1: number
+  local s2: number
+  
+  while (s1 >= 1) do
+    v1 = math.random() * 2 - 1
+    v2 = math.random() * 2 - 1
+    s1 = v1 * v1 + v2 * v2
+  end
+  
+  while (s2 >= 1) do
+    v3 = math.random() * 2 - 1
+    v4 = math.random() * 2 - 1
+    s2 = v3 * v3 + v4 * v4
+  end
+  
+  local d: number = math.sqrt((1 - s1) / s2)
+  
+  return (@vec4) {
+    x = scale * v1,
+    y = scale * v2,
+    z = scale * v3 * d,
+    w = scale * v4 * d
+  }
+end
+
+function mathkit.vec4.neg(v: vec4): vec4
+  return (@vec4) { x = -v.x, y = -v.y, z = -v.z, w = -v.w }
+end
+
+function mathkit.vec4.inv(v: vec4): vec4
+  return (@vec4) {
+    x = 1 / v.x,
+    y = 1 / v.y,
+    z = 1 / v.z,
+    w = 1 / v.w
+  }
+end
+
+function mathkit.vec4.abs(v: vec4): vec4
+  local res: vec4 = (@vec4) { x = v.x, y = v.y, z = v.z, w = v.w }
+  
+  if res.x < 0 then
+    res.x = -res.x
+  end
+  
+  if res.y < 0 then
+    res.y = -res.y
+  end
+  
+  if res.z < 0 then
+    res.z = -res.z
+  end
+  
+  if res.w < 0 then
+    res.w = -res.w
+  end
+  
+  return res
+end
+
+function mathkit.vec4.ceil(v: vec4): vec4
+  return (@vec4) {
+    x = math.ceil(v.x),
+    y = math.ceil(v.y),
+    z = math.ceil(v.z),
+    w = math.ceil(v.w)
+  }
+end
+
+function mathkit.vec4.round(v: vec4): vec4
+  return (@vec4) {
+    x = math.round(v.x),
+    y = math.round(v.y),
+    z = math.round(v.z),
+    w = math.round(v.w)
+  }
+end
+
+function mathkit.vec4.floor(v: vec4): vec4
+  return (@vec4) {
+    x = math.floor(v.x),
+    y = math.floor(v.y),
+    z = math.floor(v.z),
+    w = math.floor(v.w)
+  }
+end
+
+function mathkit.vec4.min(v1: vec4, v2: vec4): vec4
+  local res_x: number = (v1.x < v2.x and v1.x or v2.x)
+  local res_y: number = (v1.y < v2.y and v1.y or v2.y)
+  local res_z: number = (v1.z < v2.z and v1.z or v2.z)
+  local res_w: number = (v1.w < v2.w and v1.w or v2.w)
+  
+  return (@vec4) { x = res_x, y = res_y, z = res_z, w = res_w }
+end
+
+function mathkit.vec4.max(v1: vec4, v2: vec4): vec4
+  local res_x: number = (v1.x > v2.x and v1.x or v2.x)
+  local res_y: number = (v1.y > v2.y and v1.y or v2.y)
+  local res_z: number = (v1.z > v2.z and v1.z or v2.z)
+  local res_w: number = (v1.w > v2.w and v1.w or v2.w)
+  
+  return (@vec4) { x = res_x, y = res_y, z = res_z, w = res_w }
+end
+
+function mathkit.vec4.len(v: vec4): number
+  return math.sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z) + (v.w * v.w))
+end
+
+function mathkit.vec4.sqrlen(v: vec4): number
+  return (v.x * v.x) + (v.y * v.y) + (v.z * v.z) + (v.w * v.w)
+end
+
+function mathkit.vec4.dist(v1: vec4, v2: vec4): number
+  return math.sqrt((v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y) + (v1.z - v2.z) * (v1.z - v2.z) + (v1.w - v2.w) * (v1.w - v2.w))
+end
+
+function mathkit.vec4.sqrdist(v1: vec4, v2: vec4): number
+  return (v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y) + (v1.z - v2.z) * (v1.z - v2.z) + (v1.w - v2.w) * (v1.w - v2.w)
+end
+
+
+function mathkit.vec4.angle(v1: vec4, v2: vec4): number
+  return math.acos(mathkit.vec4.dot(v1, v2) / (#v1 * #v2)) * (180 / 3.14)
+end
+
+function mathkit.vec4.norm(v: vec4): vec4
+  local len: number = math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w)
+  
+  if len == 0 then
+    len = 1
+  end
+  
+  return (@vec4) {
+    x = v.x * (1 / len),
+    y = v.y * (1 / len),
+    z = v.z * (1 / len),
+    w = v.w * (1 / len)
+  }
+end
+
+function mathkit.vec4.lerp(v1: vec4, v2: vec4, amount: number): vec4
+  return (@vec4) {
+    x = v1.x + amount * (v2.x - v1.x),
+    y = v1.y + amount * (v2.y - v1.y),
+    z = v1.z + amount * (v2.z - v1.z),
+    w = v1.w + amount * (v2.w - v1.w)
+  }
+end
+
+function mathkit.vec4.reflect(v: vec4, normal: vec4): vec4
+  local dotproc: number = mathkit.vec4.dot(v, normal)
+  
+  return (@vec4) {
+    x = v.x - (2 * normal.x) * dotproc,
+    y = v.y - (2 * normal.y) * dotproc,
+    z = v.z - (2 * normal.z) * dotproc,
+    w = v.w - (2 * normal.w) * dotproc
+  }
+end
+
+function mathkit.vec4.tostring(v: vec4): string
+  return "vec4(" .. v.x .. ", " .. v.y .. ", " .. v.z .. ", " .. v.w .. ")"
+end
+
+function mathkit.vec4.equ(v1: vec4, v2: vec4): boolean
+  return (v1.x == v2.x) and (v1.y == v2.y) and (v1.z == v2.z) and (v1.w == v2.w)
+end
+
+function mathkit.vec4.transform_mat4(v: vec4, m: mat4): vec4
+  return (@vec4) {
+    x = m[0] * v.x + m[4] * v.y + m[8] * v.z + m[12] * v.w,
+    y = m[1] * v.x + m[5] * v.y + m[9] * v.z + m[13] * v.w,
+    z = m[2] * v.x + m[6] * v.y + m[10] * v.z + m[14] * v.w,
+    w = m[3] * v.x + m[7] * v.y + m[11] * v.z + m[15] * v.w
+  }
+end
+
+function mathkit.vec4.transform_quat(v: vec4, q: quat): vec4
+  local ix: number = q[3] * v.x + q[1] * v.z - q[2] * v.y
+  local iy: number = q[3] * v.y + q[2] * v.x - q[0] * v.z
+  local iz: number = q[3] * v.z + q[0] * v.y - q[1] * v.x
+  local iw: number = -q[0] * v.x - q[1] * v.y - q[2] * v.z
+  
+  return (@vec4) {
+    x = ix * q[3] + iw * -q[0] + iy * -q[2] - iz * -q[1],
+    y = iy * q[3] + iw * -q[1] + iz * -q[0] - ix * -q[2],
+    z = iz * q[3] + iw * -q[2] + ix * -q[1] - iy * -q[0],
+    w = v.w
+  }
+end
+
+--------------------------------------------------------------------
+--------------------------- module: quat ---------------------------
+--------------------------------------------------------------------
+function mathkit.quat.add(q1: quat, q2: quat): quat
+  return mathkit.quat.create({
+    q1[0] + q2[0],
+    q1[1] + q2[1],
+    q1[2] + q2[2],
+    q1[3] + q2[3]
+  })
+end
+
+function mathkit.quat.addval(q: quat, n: number): quat
+  return mathkit.quat.create({
+    q[0] + n,
+    q[1] + n,
+    q[2] + n,
+    q[3] + n
+  })
+end
+
+function mathkit.quat.sub(q1: quat, q2: quat): quat
+  return mathkit.quat.create({
+    q1[0] - q2[0],
+    q1[1] - q2[1],
+    q1[2] - q2[2],
+    q1[3] - q2[3]
+  })
+end
+
+function mathkit.quat.subval(q: quat, n: number): quat
+  return mathkit.quat.create({
+    q[0] - n,
+    q[1] - n,
+    q[2] - n,
+    q[3] - n
+  })
+end
+
+function mathkit.quat.id(): quat
+  return mathkit.quat.create({ 0, 0, 0, 1 })
+end
+
+function mathkit.quat.zero(): quat
+  return mathkit.quat.create({ 0, 0, 0, 0 })
+end
+
+function mathkit.quat.one(): quat
+  return mathkit.quat.create({ 1, 1, 1, 1 })
+end
+
+function mathkit.quat.len(q: quat): number
+  return math.sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3])
+end
+
+function mathkit.quat.sqrlen(q: quat): number
+  return q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]
+end
+
+function mathkit.quat.norm(q: quat): quat
+  local length: number = mathkit.quat.len(q)
+   
+  if length == 0 then
+    length = 1
+  end
+  
+  local ilength: number = 1 / length
+  
+  return mathkit.quat.create({
+    q[0] * ilength,
+    q[1] * ilength,
+    q[2] * ilength,
+    q[3] * ilength
+  })
+end
+
+function mathkit.quat.neg(q: quat): quat
+  return mathkit.quat.create({ -q[0], -q[1], -q[2], -q[3] })
+end
+
+function mathkit.quat.conjugate(q: quat): quat
+  return mathkit.quat.create({ -q[0], -q[1], -q[2], q[3] })
+end
+
+function mathkit.quat.inv(q: quat): quat
+  local len: number = mathkit.quat.sqrlen(q)
+  
+  if len ~= 0 then
+    return mathkit.quat.create({
+      q[0] * -(1 / len),
+      q[1] * -(1 / len),
+      q[2] * -(1 / len),
+      q[3] * -(1 / len)
+    })
+  end
+  
+  return q
+end
+
+function mathkit.quat.rand(): quat
+  local u1: number = math.random()
+  local u2: number = math.random()
+  local u3: number = math.random()
+  
+  local sqrt1_sub_u1: number = math.sqrt(1 - u1)
+  local sqrt_u1: number = math.sqrt(u1)
+  
+  return mathkit.quat.create({
+    sqrt1_sub_u1 * math.sin(2 * math.pi * u2),
+    sqrt1_sub_u1 * math.cos(2 * math.pi * u2),
+    sqrt_u1 * math.sin(2 * math.pi * u3),
+    sqrt_u1 * math.cos(2 * math.pi * u3)
+  })
+end
+
+function mathkit.quat.from_axis_angle(axis: vec3, angle: number): quat
+  local res: quat = mathkit.quat.id()
+  local axis_len: number = math.sqrt(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z)
+  local a: number = angle * 0.5
+  
+  if axis_len < 0 then
+    local axis_norm = mathkit.vec3.norm(axis)
+    
+    res[0] = axis_norm.x * math.sin(a)
+    res[1] = axis_norm.y * math.sin(a)
+    res[2] = axis_norm.z * math.sin(a)
+    res[3] = math.cos(a)
+    
+    res = mathkit.quat.norm(res)
+  end
+  
+  return res
+end
+
+function mathkit.quat.to_axis_angle(q: quat, axis: *vec3, angle: *number): void
+  local rq: quat = q
+  
+  if math.abs(q[3]) > 1 then
+    rq = mathkit.quat.norm(q)
+  end
+  
+  local res_axis: vec3 = (@vec3) { x = 0, y = 0, z = 0 }
+  local den: number = math.sqrt(1 - (q[3] * q[3]))
+  
+  if den > 0.0001 then
+    res_axis.x = q[0] / den
+    res_axis.y = q[1] / den
+    res_axis.z = q[2] / den
+  else
+    res_axis.x = 1
+  end
+  
+  $axis = res_axis
+  $angle = 2 * math.acos(q[3])
+end
+
+function mathkit.quat.rot_to(v1: vec3, v2: vec3): quat
+  local xu: vec3 = (@vec3) { x = 1, y = 0, z = 0 }
+  local yu: vec3 = (@vec3) { x = 0, y = 1, z = 0 }
+  local dot: number = mathkit.vec3.dot(v1, v2)
+  
+  if dot < -0.999999 then
+    local tmp: vec3 = mathkit.vec3.cross(xu, v1)
+    
+    if mathkit.vec3.len(tmp) < 0.000001 then
+      tmp = mathkit.vec3.cross(yu, v1)
+    end
+    
+    tmp = mathkit.vec3.norm(tmp)
+    
+    return mathkit.quat.from_axis_angle(tmp, math.pi)
+    
+  elseif dot > 0.999999 then
+    return mathkit.quat.create({ 0, 0, 0, 1 })
+  else
+    local tmp: vec3 = mathkit.vec3.cross(v1, v2)
+    
+    return mathkit.quat.norm((@quat) {
+      data = {
+        tmp.x,
+        tmp.y,
+        tmp.z,
+        1 + dot
+      }
+    })
+  end
+end
+
+function mathkit.quat.rotx(q: quat, rad: number): quat
+  local bx: number = math.sin(rad * 0.5)
+  local bw: number = math.cos(rad * 0.5)
+  
+  return mathkit.quat.create({
+    q[0] * bw + q[3] * bx,
+    q[1] * bw + q[2] * bx,
+    q[2] * bw - q[1] * bx,
+    q[3] * bw - q[0] * bx
+  })
+end
+
+function mathkit.quat.roty(q: quat, rad: number): quat
+  local by: number = math.sin(rad * 0.5)
+  local bw: number = math.cos(rad * 0.5)
+  
+  return mathkit.quat.create({
+    q[0] * bw + q[2] * by,
+    q[1] * bw + q[3] * by,
+    q[2] * bw - q[0] * by,
+    q[3] * bw - q[1] * by
+  })
+end
+
+function mathkit.quat.rotz(q: quat, rad: number): quat
+  local bz: number = math.sin(rad * 0.5)
+  local bw: number = math.cos(rad * 0.5)
+  
+  return mathkit.quat.create({
+    q[0] * bw + q[1] * bz,
+    q[1] * bw + q[0] * bz,
+    q[2] * bw - q[3] * bz,
+    q[3] * bw - q[2] * bz
+  })
+end
+
+function mathkit.quat.calc_w(q: quat): quat
+  return mathkit.quat.create({
+    q[0],
+    q[1],
+    q[2],
+    math.sqrt(math.abs(1 - q[0] * q[0] - q[1] * q[1] - q[2] * q[2]))
+  })
+end
+
+function mathkit.quat.ln(q: quat): quat
+  local r: number = math.sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2])
+  local t: number = (r > 0) and math.atan2(r, q[3]) / r or 0
+  
+  return mathkit.quat.create({
+    q[0] * t,
+    q[1] * t,
+    q[2] * t,
+    0.5 * math.log(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3])
+  })
+end
+
+function mathkit.quat.exp(q: quat): quat
+  local r: number = math.sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2])
+  local et: number = math.exp(q[3])
+  local s: number = (r > 0) and (et * math.sin(r)) / r or 0
+  
+  return mathkit.quat.create({
+    q[0] * s,
+    q[1] * s,
+    q[2] * s,
+    et * math.cos(r)
+  })
+end
+
+function mathkit.quat.mul(q1: quat, q2: quat): quat
+  return mathkit.quat.create({
+    q1[0] * q2[3] + q1[3] * q2[0] + q1[1] * q2[2] - q1[2] * q2[1],
+    q1[1] * q2[3] + q1[3] * q2[1] + q1[2] * q2[0] - q1[0] * q2[2],
+    q1[2] * q2[3] + q1[3] * q2[2] + q1[0] * q2[1] - q1[1] * q2[0],
+    q1[3] * q2[3] - q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2]
+  })
+end
+
+function mathkit.quat.div(q1: quat, q2: quat): quat
+  return mathkit.quat.create({
+    q1[0] / q2[0],
+    q1[1] / q2[1],
+    q1[2] / q2[2],
+    q1[3] / q2[3]
+  })
+end
+
+function mathkit.quat.scale(q: quat, scalar: number): quat
+  return mathkit.quat.create({
+    q[0] * scalar + q[3] * scalar + q[1] * scalar - q[2] * scalar,
+    q[1] * scalar + q[3] * scalar + q[2] * scalar - q[0] * scalar,
+    q[2] * scalar + q[3] * scalar + q[0] * scalar - q[1] * scalar,
+    q[3] * scalar - q[0] * scalar - q[1] * scalar - q[2] * scalar
+  })
+end
+
+function mathkit.quat.scale_and_add(q: quat, scalar: number, add: number): quat
+  return mathkit.quat.create({
+    (q[0] + add) * scalar + (q[3] + add) * scalar + (q[1] + add) * scalar - (q[2] + add) * scalar,
+    (q[1] + add) * scalar + (q[3] + add) * scalar + (q[2] + add) * scalar - (q[0] + add) * scalar,
+    (q[2] + add) * scalar + (q[3] + add) * scalar + (q[0] + add) * scalar - (q[1] + add) * scalar,
+    (q[3] + add) * scalar - (q[0] + add) * scalar - (q[1] + add) * scalar - (q[2] + add) * scalar
+  })
+end
+
+function mathkit.quat.pow(q: quat, n: number): quat
+  local res: quat = mathkit.quat.ln(q)
+  res = mathkit.quat.scale(res, n)
+  res = mathkit.quat.exp(res)
+  return res
+end
+
+function quat.__pow(q: quat, n: number): quat
+  local res: quat = mathkit.quat.ln(q)
+  res = mathkit.quat.scale(res, n)
+  res = mathkit.quat.exp(res)
+  return res
+end
+
+function mathkit.quat.abs(q: quat): quat
+  local res: quat = q
+  
+  for i = 0, #res - 1 do
+    if res[i] < 0 then
+      res[i] = -res[i]
+    end
+  end
+  
+  return res
+end
+
+function mathkit.quat.ceil(q: quat): quat
+  local res: quat = q
+  
+  for i = 0, #res - 1 do
+    res[i] = math.ceil(res[i])
+  end
+  
+  return res
+end
+
+function mathkit.quat.round(q: quat): quat
+  local res: quat = q
+  
+  for i = 0, #res - 1 do
+    res[i] = math.round(res[i])
+  end
+  
+  return res
+end
+
+function mathkit.quat.floor(q: quat): quat
+  local res: quat = q
+  
+  for i = 0, #res - 1 do
+    res[i] = math.floor(res[i])
+  end
+  
+  return res
+end
+
+function mathkit.quat.min(q1: quat, q2: quat): quat
+  local res: quat = mathkit.quat.zero()
+  
+  for i = 0, #res - 1 do
+    res[i] = (q1[i] < q2[i]) and q1[i] or q2[i]
+  end
+  
+  return res
+end
+
+function mathkit.quat.max(q1: quat, q2: quat): quat
+  local res: quat = mathkit.quat.zero()
+  
+  for i = 0, #res - 1 do
+    res[i] = (q1[i] > q2[i]) and q1[i] or q2[i]
+  end
+  
+  return res
+end
+
+function mathkit.quat.dist(q1: quat, q2: quat): number
+  return math.sqrt((q1[0] - q2[0]) * (q1[0] - q2[0]) + (q1[1] - q2[1]) * (q1[1] - q2[1]) + (q1[2] - q2[2]) * (q1[2] - q2[2]) + (q1[3] - q2[3]) * (q1[3] - q2[3]))
+end
+
+function mathkit.quat.sqrdist(q1: quat, q2: quat): number
+  return ((q1[0] - q2[0]) * (q1[0] - q2[0]) + (q1[1] - q2[1]) * (q1[1] - q2[1]) + (q1[2] - q2[2]) * (q1[2] - q2[2]) + (q1[3] - q2[3]) * (q1[3] - q2[3]))
+end
+
+function mathkit.quat.dot(q1: quat, q2: quat): number
+  return (q1[0] * q2[0]) + (q1[1] * q2[1]) + (q1[2] * q2[2]) + (q1[3] * q2[3])
+end
+
+function mathkit.quat.cross(a: quat, b: quat, c: quat): quat
+  return mathkit.quat.create({
+    a[1] * (b[2] * c[3] - b[3] * c[2]) - a[2] * (b[1] * c[3] - b[3] * c[1]) + a[3] * (b[1] * c[2] - b[2] * c[1]),
+    -(a[0] * (b[2] * c[3] - b[3] * c[2])) + a[2] * (b[0] * c[3] - b[3] * c[0]) - a[3] * (b[0] * c[2] - b[2] * c[0]),
+    a[0] * (b[1] * c[3] - b[3] * c[1]) - a[1] * (b[0] * c[3] - b[3] * c[0]) + a[3] * (b[0] * c[1] - b[1] * c[0]),
+    -(a[0] * (b[1] * c[2] - b[2] * c[1])) + a[1] * (b[0] * c[2] - b[2] * c[0]) - a[2] * (b[0] * c[1] - b[1] * c[0])
+  })
+end
+
+function mathkit.quat.angle(q1: quat, q2: quat): number
+  return math.acos(mathkit.quat.dot(q1, q2) / (#q1 * #q2)) * (180 / 3.14)
+end
+
+function mathkit.quat.reflect(q: quat, normal: quat): quat
+  local dotproc: number = mathkit.quat.dot(q, normal)
+  
+  return mathkit.quat.create({
+    q[0] - (2 * normal[0]) * dotproc,
+    q[1] - (2 * normal[1]) * dotproc,
+    q[2] - (2 * normal[2]) * dotproc,
+    q[3] - (2 * normal[3]) * dotproc
+  })
+end
+
+function mathkit.quat.lerp(q1: quat, q2: quat, amount: number): quat
+  return mathkit.quat.create({
+    q1[0] + amount * (q2[0] - q1[0]),
+    q1[1] + amount * (q2[1] - q1[1]),
+    q1[2] + amount * (q2[2] - q1[2]),
+    q1[3] + amount * (q2[3] - q1[3])
+  })
+end
+
+function mathkit.quat.nlerp(q1: quat, q2: quat, amount: number): quat
+  return mathkit.quat.norm(mathkit.quat.lerp(q1, q2, amount))
+end
+
+function mathkit.quat.slerp(q1: quat, q2: quat, t: number): quat
+  local a: quat = q1
+  local b: quat = q2
+  local omega: number
+  local cosom: number = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3]
+  local sinom: number
+  local scale0: number
+  local scale1: number
+  
+  if cosom < 0 then
+    cosom = -cosom
+    b[0] = -b[0]
+    b[1] = -b[1]
+    b[2] = -b[2]
+    b[3] = -b[3]
+  end
+  
+  if 1 - cosom > 0.000001 then
+    omega = math.acos(cosom)
+    sinom = math.sin(omega)
+    scale0 = math.sin((1 - t) * omega) / sinom
+    scale1 = math.sin(t * omega) / sinom
+  else
+    scale0 = 1 - t
+    scale1 = t
+  end
+  
+  return mathkit.quat.create({
+    scale0 * a[0] + scale1 * b[0],
+    scale0 * a[1] + scale1 * b[1],
+    scale0 * a[2] + scale1 * b[2],
+    scale0 * a[3] + scale1 * b[3]
+  })
+end
+
+function mathkit.quat.sqlerp(a: quat, b: quat, c: quat, d: quat, t: number): quat
+  local q1: quat = mathkit.quat.lerp(a, d, t)
+  local q2: quat = mathkit.quat.lerp(b, c, t)
+  
+  return mathkit.quat.slerp(q1, q2, 2 * t * (1 - t))
+end
+
+function mathkit.quat.vec3_to_vec3(from: vec3, to: vec3): quat
+  local theta: number = mathkit.vec3.dot(from, to)
+  local cross: vec3 = mathkit.vec3.cross(from, to)
+  
+  return mathkit.quat.norm((@quat) {
+    data = {
+      cross.x,
+      cross.y,
+      cross.z,
+      1 + theta
+    }
+  })
+end
+
+function mathkit.quat.from_mat3(m: mat3): quat
+  local f_trace: number = m[0] + m[4] + m[8]
+  local f_root: number
+  
+  if f_trace > 0 then
+    f_root = math.sqrt(f_trace + 1)
+    local w: number = 0.5 * f_root
+    f_root = 0.5 / f_root
+    
+    return mathkit.quat.create({
+      (m[5] - m[7]) * f_root,
+      (m[6] - m[2]) * f_root,
+      (m[1] - m[3]) * f_root,
+      w
+    })
+  else
+    local i: uinteger = 0
+    local res: quat = mathkit.quat.zero()
+    
+    if m[4] > m[0] then
+      i = 1
+    end
+    
+    if m[8] > m[i * 3 + i] then
+      i = 2
+    end
+    
+    local j: uinteger = (i + 1) % 3
+    local k: uinteger = (i + 2) % 3
+    
+    f_root = math.sqrt(m[i * 3 + i] - m[j * 3 + j] - m[k * 3 + k] + 1)
+    res[i] = 0.5 * f_root
+    f_root = 0.5 / f_root
+    res[3] = (m[j * 3 + k] - m[k * 3 + j]) * f_root
+    res[j] = (m[j * 3 + i] + m[i * 3 + j]) * f_root
+    res[k] = (m[k * 3 + i] + m[i * 3 + k]) * f_root
+    
+    return res
+  end
+end
+
+function mathkit.quat.from_mat4(m: mat4): quat
+  if (m[0] > m[5]) and (m[0] > m[10]) then
+    local s: number = math.sqrt(1 + m[0] - m[5] - m[10]) * 2
+     
+    return mathkit.quat.create({
+      0.25 * s,
+      (m[4] + m[1]) / s,
+      (m[2] + m[8]) / s,
+      (m[9] - m[6])/ s
+    })
+    
+  elseif m[5] > m[10] then
+    local s: number = math.sqrt(1 + m[5] - m[0] - m[10]) * 2
+    
+    return mathkit.quat.create({
+      (m[4] + m[1]) / s,
+      0.25 * s,
+      (m[9] + m[6]) / s,
+      (m[2] - m[8]) / s
+    })
+  
+  else
+    local s: number = math.sqrt(1 + m[10] - m[0] - m[5]) * 2
+    
+    return mathkit.quat.create({
+      (m[2] + m[8]) / s,
+      (m[9] + m[6]) / s,
+      0.25 * s,
+      (m[4] - m[1]) / s
+    })
+  end
+end
+
+function mathkit.quat.from_euler(pitch: number, yaw: number, roll: number): quat
+  local x0: number = math.cos(pitch * 0.5)
+  local x1: number = math.sin(pitch * 0.5)
+  local y0: number = math.cos(yaw * 0.5)
+  local y1: number = math.sin(yaw * 0.5)
+  local z0: number = math.cos(roll * 0.5)
+  local z1: number = math.sin(roll * 0.5)
+
+  return mathkit.quat.create({
+    x1 * y0 * z0 - x0 * y1 * z1,
+    x0 * y1 * z0 + x1 * y0 * z1,
+    x0 * y0 * z1 - x1 * y1 * z0,
+    x0 * y0 * z0 + x1 * y1 * z1
+  })
+end
+
+function mathkit.quat.to_euler(q: quat): vec3
+  local x0: number = 2 * (q[3] * q[0] + q[1] * q[2])
+  local x1: number = 1 - 2* (q[0] *q[0] + q[1] * q[2])
+  
+  local y0: number = 2 * (q[3] * q[1] - q[2] * q[0])
+  y0 = (y0 > 1) and 1 or y0
+  y0 = (y0 < -1) and -1 or y0
+  
+  local z0: number = 2 * (q[3] * q[2] + q[0] * q[1])
+  local z1: number = 1 - 2 * (q[1] * q[1] + q[2] * q[2])
+
+  return (@vec3) {
+    x = math.atan2(x0, x1) * (180 / 3.14),
+    y = math.asin(y0) * (180 / 3.14),
+    z = math.atan2(z0, z1) * (180 / 3.14) 
+  }
+end
+
+function mathkit.quat.transform(q: quat, m: mat4): quat
+  return mathkit.quat.create({
+    m[0] * q[0] + m[4] * q[1] + m[8] * q[2] + m[12] * q[3],
+    m[1] * q[0] + m[5] * q[1] + m[9] * q[2] + m[13] * q[3],
+    m[2] * q[0] + m[6] * q[1] + m[10] * q[2] + m[14] * q[3],
+    m[3] * q[0] + m[7] * q[1] + m[11] * q[2] + m[15] * q[3]
+  })
+end
+
+function mathkit.quat.equ(q1: [4]number, q2: [4]number): boolean
+  return (q1[0] == q2[0]) and (q1[1] == q2[1]) and (q1[2] == q2[2]) and (q1[3] == q2[3])
+end
+
+function mathkit.quat.set_axis(q: *quat, view: vec3, right: vec3, up: vec3): void
+  $q = mathkit.quat.norm(mathkit.quat.from_mat3((@mat3) {
+    data = {
+      right.x, up.x, -view.x,
+      right.y, up.y, -view.y,
+      right.z, up.z, -view.z
+    }
+  }))
+end
+
+--------------------------------------------------------------------
+--------------------------- module: quat2 --------------------------
+--------------------------------------------------------------------
+function mathkit.quat2.add(q1: quat2, q2: quat2): quat2
+  return mathkit.quat2.create({
+    q1[0] + q2[0],
+    q1[1] + q2[1],
+    q1[2] + q2[2],
+    q1[3] + q2[3],
+    q1[4] + q2[4],
+    q1[5] + q2[5],
+    q1[6] + q2[6],
+    q1[7] + q2[7]
+  })
+end
+
+function mathkit.quat2.addval(q: quat2, n: number): quat2
+  return mathkit.quat2.create({
+    q[0] + n,
+    q[1] + n,
+    q[2] + n,
+    q[3] + n,
+    q[4] + n,
+    q[5] + n,
+    q[6] + n,
+    q[7] + n
+  })
+end
+
+function mathkit.quat2.sub(q1: quat2, q2: quat2): quat2
+  return mathkit.quat2.create({
+    q1[0] - q2[0],
+    q1[1] - q2[1],
+    q1[2] - q2[2],
+    q1[3] - q2[3],
+    q1[4] - q2[4],
+    q1[5] - q2[5],
+    q1[6] - q2[6],
+    q1[7] - q2[7]
+  })
+end
+
+function mathkit.quat2.subval(q: quat2, n: number): quat2
+  return mathkit.quat2.create({
+    q[0] - n,
+    q[1] - n,
+    q[2] - n,
+    q[3] - n,
+    q[4] - n,
+    q[5] - n,
+    q[6] - n,
+    q[7] - n
+  })
+end
+
+function mathkit.quat2.id(): quat2
+  return mathkit.quat2.create({ 0, 0, 0, 1, 0, 0, 0, 0 })
+end
+
+function mathkit.quat2.len(q: quat2): number
+  return math.sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3] + q[4] * q[4] + q[5] * q[5] + q[6] * q[6] + q[7] * q[7])
+end
+
+function mathkit.quat2.sqrlen(q: quat2): number
+  return (q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3] + q[4] * q[4] + q[5] * q[5] + q[6] * q[6] + q[7] * q[7])
+end
+
+function mathkit.quat2.neg(q: quat2): quat2
+  return mathkit.quat2.create({ -q[0], -q[1], -q[2], -q[3], -q[4], -q[5], -q[6], -q[7] })
+end
+
+function mathkit.quat2.zero(): quat2
+  return mathkit.quat2.create({ 0, 0, 0, 0, 0, 0, 0, 0 })
+end
+
+function mathkit.quat2.one(): quat2
+  return mathkit.quat2.create({ 1, 1, 1, 1, 1, 1, 1, 1 })
+end
+
+function mathkit.quat2.conjugate(q: quat2): quat2
+  return mathkit.quat2.create({ -q[0], -q[1], -q[2], q[3], -q[4], -q[5], -q[6], q[7] })
+end
+
+function mathkit.quat2.abs(q: quat2): quat2
+  local res: quat2 = q
+  
+  for i = 0, #res - 1 do
+    if res[i] < 0 then
+      res[i] = -res[i]
+    end
+  end
+  
+  return res
+end
+
+function mathkit.quat2.ceil(q: quat2): quat2
+  local res: quat2 = mathkit.quat2.zero()
+  
+  for i = 0, #res - 1 do
+    res[i] = math.ceil(q[i])
+  end
+  
+  return res
+end
+
+function mathkit.quat2.round(q: quat2): quat2
+  local res: quat2 = mathkit.quat2.zero()
+  
+  for i = 0, #res - 1 do
+    res[i] = math.round(q[i])
+  end
+  
+  return res
+end
+
+function mathkit.quat2.floor(q: quat2): quat2
+  local res: quat2 = mathkit.quat2.zero()
+  
+  for i = 0, #res - 1 do
+    res[i] = math.floor(q[i])
+  end
+  
+  return res
+end
+
+function mathkit.quat2.min(q1: quat2, q2: quat2): quat2
+  local res: quat2 = mathkit.quat2.zero()
+  
+  for i = 0, #res - 1 do
+    res[i] = (q1[i] < q2[i]) and q1[i] or q2[i] 
+  end
+  
+  return res
+end
+
+function mathkit.quat2.max(q1: quat2, q2: quat2): quat2
+  local res: quat2 = mathkit.quat2.zero()
+  
+  for i = 0, #res - 1 do
+    res[i] = (q1[i] > q2[i]) and q1[i] or q2[i] 
+  end
+  
+  return res
+end
+
+function mathkit.quat2.dist(q1: quat2, q2: quat2): number
+  local res: number
+  
+  for i = 0, #q1.data - 1 do
+    res = res + math.sqrt((q1[i] - q2[i]) * (q1[i] - q2[i]))
+  end
+  
+  return res
+end
+
+function mathkit.quat2.sqrdist(q1: quat2, q2: quat2): number
+  local res: number
+  
+  for i = 0, #q1.data - 1 do
+    res = res + (q1[i] - q2[i]) * (q1[i] - q2[i])
+  end
+  
+  return res
+end
+
+function mathkit.quat2.dot(q1: quat2, q2: quat2): number
+  local res: number
+  
+  for i = 0, #q1.data - 1 do
+    res = res + (q1[i] * q2[i])
+  end
+  
+  return res
+end
+
+function mathkit.quat2.norm(q: quat2): quat2
+  local mag: number = mathkit.quat2.sqrlen(q)
+  
+  if mag > 0 then
+    mag = math.sqrt(mag)
+    local a_dot_b: number = (q[0] / mag) * q[4] + (q[1] / mag) * q[5] + (q[2] / mag) * q[6] + (q[3] / mag) * q[7];
+    
+    return mathkit.quat2.create({
+      (q[0] / mag),
+      (q[1] / mag),
+      (q[2] / mag),
+      (q[3] / mag),
+      (q[4] - (q[0] / mag) * a_dot_b) / mag,
+      (q[5] - (q[1] / mag) * a_dot_b) / mag,
+      (q[6] - (q[2] / mag) * a_dot_b) / mag,
+      (q[7] - (q[3] / mag) * a_dot_b) / mag
+    })
+  else
+    return q
+  end
+end
+
+function mathkit.quat2.inv(q: quat2): quat2
+  local len: number = mathkit.quat2.sqrlen(q)
+  
+  return mathkit.quat2.create({
+    -q[0] / len,
+    -q[1] / len,
+    -q[2] / len,
+    q[3] / len,
+    -q[4] / len,
+    -q[5] / len,
+    -q[6] / len,
+    q[7] / len
+  })
+end
+
+function mathkit.quat2.equ(q1: quat2, q2: quat2): boolean
+  return (q1[0] == q2[0]) and
+         (q1[1] == q2[1]) and
+         (q1[2] == q2[2]) and
+         (q1[3] == q2[3]) and
+         (q1[4] == q2[4]) and
+         (q1[5] == q2[5]) and
+         (q1[6] == q2[6]) and
+         (q1[7] == q2[7])
+end
+
+function mathkit.quat2.rotx(q: quat2, rad: number): quat2
+  local ax1: number = q[4] * q[3] + q[7] * -q[0] + q[5] * -q[2] - q[6] * -q[1]
+  local ay1: number = q[5] * q[3] + q[7] * -q[1] + q[6] * -q[0] - q[4] * -q[2]
+  local az1: number = q[6] * q[3] + q[7] * -q[2] + q[4] * -q[1] - q[5] * -q[0]
+  local aw1: number = q[7] * q[7] - q[4] * -q[0] - q[5] * -q[1] - q[6] * -q[2]
+  
+  local bx: number = math.sin(rad * 0.5)
+  local bw: number = math.cos(rad * 0.5)
+  
+  local bx1: number = q[0] * bw + q[3] * bx
+  local by1: number = q[1] * bw + q[2] * bx
+  local bz1: number = q[2] * bw - q[1] * bx
+  local bw1: number = q[3] * bw - q[0] * bx
+  
+  return mathkit.quat2.create({
+    bx1,
+    by1,
+    bz1,
+    bw1,
+    ax1 * bw1 + aw1 * bx1 + ay1 * bz1 - az1 * by1,
+    ax1 * bw1 + aw1 * bx1 + ay1 * bz1 - az1 * by1,
+    az1 * bw1 + aw1 * bz1 + ax1 * by1 - ay1 * bx1,
+    aw1 * bw1 - ax1 * bx1 - ay1 * by1 - az1 * bz1
+  })
+end
+
+function mathkit.quat2.roty(q: quat2, rad: number): quat2
+  local ax1: number = q[4] * q[3] + q[7] * -q[0] + q[5] * -q[2] - q[6] * -q[1]
+  local ay1: number = q[5] * q[3] + q[7] * -q[1] + q[6] * -q[0] - q[4] * -q[2]
+  local az1: number = q[6] * q[3] + q[7] * -q[2] + q[4] * -q[1] - q[5] * -q[0]
+  local aw1: number = q[7] * q[7] - q[4] * -q[0] - q[5] * -q[1] - q[6] * -q[2]
+  
+  local by: number = math.sin(rad * 0.5)
+  local bw: number = math.cos(rad * 0.5)
+  
+  local bx1: number = q[0] * bw + q[2] * by
+  local by1: number = q[1] * bw + q[3] * by
+  local bz1: number = q[2] * bw - q[0] * by
+  local bw1: number = q[3] * bw - q[1] * by
+  
+  return mathkit.quat2.create({
+    bx1,
+    by1,
+    bz1,
+    bw1,
+    ax1 * bw1 + aw1 * bx1 + ay1 * bz1 - az1 * by1,
+    ax1 * bw1 + aw1 * bx1 + ay1 * bz1 - az1 * by1,
+    az1 * bw1 + aw1 * bz1 + ax1 * by1 - ay1 * bx1,
+    aw1 * bw1 - ax1 * bx1 - ay1 * by1 - az1 * bz1
+  })
+end
+
+function mathkit.quat2.rotz(q: quat2, rad: number): quat2
+  local ax1: number = q[4] * q[3] + q[7] * -q[0] + q[5] * -q[2] - q[6] * -q[1]
+  local ay1: number = q[5] * q[3] + q[7] * -q[1] + q[6] * -q[0] - q[4] * -q[2]
+  local az1: number = q[6] * q[3] + q[7] * -q[2] + q[4] * -q[1] - q[5] * -q[0]
+  local aw1: number = q[7] * q[7] - q[4] * -q[0] - q[5] * -q[1] - q[6] * -q[2]
+  
+  local bz: number = math.sin(rad * 0.5)
+  local bw: number = math.cos(rad * 0.5)
+  
+  local bx1: number = q[0] * bw + q[1] * bz
+  local by1: number = q[1] * bw + q[0] * bz
+  local bz1: number = q[2] * bw - q[3] * bz
+  local bw1: number = q[3] * bw - q[2] * bz
+  
+  return mathkit.quat2.create({
+    bx1,
+    by1,
+    bz1,
+    bw1,
+    ax1 * bw1 + aw1 * bx1 + ay1 * bz1 - az1 * by1,
+    ax1 * bw1 + aw1 * bx1 + ay1 * bz1 - az1 * by1,
+    az1 * bw1 + aw1 * bz1 + ax1 * by1 - ay1 * bx1,
+    aw1 * bw1 - ax1 * bx1 - ay1 * by1 - az1 * bz1
+  })
+end
+
+function mathkit.quat2.calc_w(q: quat2): quat2
+  return mathkit.quat2.create({
+    q[0],
+    q[1],
+    q[2],
+    q[3],
+    q[4],
+    q[5],
+    q[6],
+    math.sqrt(math.abs(1 - q[0] * q[0] - q[1] * q[1] - q[2] * q[2] - q[3] * q[3] - q[4] * q[4] - q[5] * q[5] - q[6] * q[6] - q[7] * q[7]))
+  })
+end
+
+function mathkit.quat2.mul(q1: quat2, q2: quat2): quat2
+  return mathkit.quat2.create({
+    q1[0] * q2[3] + q1[3] * q2[0] + q1[1] * q2[2] - q1[2] * q2[1],
+    q1[1] * q2[3] + q1[3] * q2[1] + q1[2] * q2[0] - q1[0] * q2[2],
+    q1[2] * q2[3] + q1[3] * q2[2] + q1[0] * q2[1] - q1[1] * q2[0],
+    q1[3] * q2[3] - q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2],
+    
+    q1[0] * q2[7] + q1[3] * q2[4] + q1[1] * q2[6] - q1[2] * q2[5] +
+    q1[4] * q2[3] + q1[7] * q2[0] + q1[5] * q2[2] - q1[7] * q2[1],
+    
+    q1[1] * q2[7] + q1[3] * q2[5] + q1[2] * q2[4] - q1[0] * q2[6] +
+    q1[5] * q2[3] + q1[7] * q2[1] + q1[6] * q2[0] - q1[4] * q2[3],
+    
+    q1[2] * q2[7] + q1[3] * q2[6] + q1[0] * q2[5] - q1[1] * q2[4] +
+    q1[6] * q2[3] + q1[7] * q2[2] + q1[4] * q2[1] - q1[5] * q2[0],
+    
+    q1[3] * q2[7] - q1[0] * q2[4] - q1[1] * q2[5] - q1[2] * q2[6] +
+    q1[7] * q2[3] - q1[4] * q2[0] - q1[5] * q2[1] - q1[6] * q2[2]    
+  })
+end
+
+function mathkit.quat2.div(q1: quat2, q2: quat2): quat2
+  return mathkit.quat2.create({
+    q1[0] / q2[0],
+    q1[1] / q2[1],
+    q1[2] / q2[2],
+    q1[3] / q2[3],
+    q1[4] / q2[4],
+    q1[5] / q2[5],
+    q1[6] / q2[6],
+    q1[7] / q2[7]
+  })
+end
+
+function mathkit.quat2.scale(q: quat2, scalar: number): quat2
+  return mathkit.quat2.create({
+    q[0] * scalar,
+    q[1] * scalar,
+    q[2] * scalar,
+    q[3] * scalar,
+    q[4] * scalar,
+    q[5] * scalar,
+    q[6] * scalar,
+    q[7] * scalar,
+  })
+end
+
+function mathkit.quat2.scale_and_add(q: quat2, scalar: number, add: number): quat2
+  return mathkit.quat2.create({
+    (q[0] + add) * scalar,
+    (q[1] + add) * scalar,
+    (q[2] + add) * scalar,
+    (q[3] + add) * scalar,
+    (q[4] + add) * scalar,
+    (q[5] + add) * scalar,
+    (q[6] + add) * scalar,
+    (q[7] + add) * scalar
+  })
+end
+
+function mathkit.quat2.angle(q1: quat2, q2: quat2): number
+  return math.acos(mathkit.quat2.dot(q1, q2) / (#q1 * #q2)) * (180 / 3.14)
+end
+
+function mathkit.quat2.reflect(q: quat2, normal: quat2): quat2
+  local dotproc: number = mathkit.quat2.dot(q, normal)
+  local res: quat2 = mathkit.quat2.zero()
+  
+  for i = 0, #res - 1 do
+    res[i] = q[i] - (2 * normal[i]) * dotproc
+  end
+  
+  return res
+end
+
+function mathkit.quat2.lerp(q1: quat2, q2: quat2, amount: number): quat2
+  local mt: number = 1 - amount
+  local am: number = amount
+  
+  if mathkit.quat2.dot(q1, q2) < 0 then
+    am = -am
+  end
+  
+  return mathkit.quat2.create({
+    q1[0] * mt + q2[0] * am,
+    q1[1] * mt + q2[1] * am,
+    q1[2] * mt + q2[2] * am,
+    q1[3] * mt + q2[3] * am,
+    q1[4] * mt + q2[4] * am,
+    q1[5] * mt + q2[5] * am,
+    q1[6] * mt + q2[6] * am,
+    q1[7] * mt + q2[7] * am
+  })
+end
+
+function mathkit.quat2.nlerp(q1: quat2, q2: quat2, amount: number): quat2
+  return mathkit.quat2.norm(mathkit.quat2.lerp(q1, q2, amount))
+end
+
+function mathkit.quat2.get_dual(q: quat2): quat
+  return mathkit.quat.create({ q[4], q[5], q[6], q[7] })
+end
+
+function mathkit.quat2.set_dual(q: *quat2, dual: quat): void
+  q[4] = dual[0]
+  q[5] = dual[1]
+  q[6] = dual[2]
+  q[7] = dual[3]
+end
+
+function mathkit.quat2.tostring(q: quat2): string
+  return "quat2(" .. q[0] .. ", " .. q[1] .. ", " .. q[2] .. ", " .. q[3] .. ", " .. q[4] .. ", " .. q[5] .. ", " .. q[6] .. ", " .. q[7] .. ")"
+end
+
+function mathkit.quat2.from_vec3(v: vec3): quat2
+  return mathkit.quat2.create({
+    0,
+    0,
+    0,
+    1,
+    v.x * 0.5,
+    v.y * 0.5,
+    v.z * 0.5,
+    0
+  })
+end
+
+function mathkit.quat2.translate(q: quat2, v: vec3): quat2
+  return mathkit.quat2.create({
+    q[0],
+    q[1],
+    q[2],
+    q[3],
+    q[3] * (v.x * 0.5) + q[1] * (v.z * 0.5) - q[2] * (v.y * 0.5) + q[4],
+    q[3] * (v.y * 0.5) + q[2] * (v.x * 0.5) - q[0] * (v.z * 0.5) + q[5],
+    q[3] * (v.z * 0.5) + q[0] * (v.y * 0.5) - q[1] * (v.x * 0.5) + q[6],
+    -q[0] * (v.x * 0.5) - q[1] * (v.y * 0.5) - q[2] * (v.z * 0.5) + q[7]
+  })
+end
+
+function mathkit.quat2.rot_by_quat_append(q1: quat2, q2: [4]number): quat2 
+  return mathkit.quat2.create({
+    q1[0] * q2[3] + q1[3] * q2[0] + q1[1] * q2[2] - q1[2] * q2[1],
+    q1[1] * q2[3] + q1[3] * q2[1] + q1[2] * q2[0] - q1[0] * q2[2],
+    q1[2] * q2[3] + q1[3] * q2[2] + q1[0] * q2[1] - q1[1] * q2[0],
+    q1[3] * q2[3] - q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2],
+    q1[4] * q2[3] + q1[7] * q2[0] + q1[5] * q2[2] - q1[6] * q2[1],
+    q1[5] * q2[3] + q1[7] * q2[1] + q1[6] * q2[0] - q1[4] * q2[2],
+    q1[6] * q2[3] + q1[7] * q2[2] + q1[4] * q2[1] - q1[5] * q2[0],
+    q1[7] * q2[3] - q1[4] * q2[0] - q1[5] * q2[1] - q1[6] * q2[2]
+  })
+end
+
+function mathkit.quat2.rot_by_quat_prepend(q1: [4]number, q2: quat2): quat2 
+  return mathkit.quat2.create({
+    q1[0] * q2[3] + q1[3] * q2[0] + q1[1] * q2[2] - q1[2] * q2[1],
+    q1[1] * q2[3] + q1[3] * q2[1] + q1[2] * q2[0] - q1[0] * q2[2],
+    q1[2] * q2[3] + q1[3] * q2[2] + q1[0] * q2[1] - q1[1] * q2[0],
+    q1[3] * q2[3] - q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2],
+    q1[0] * q2[7] + q1[3] * q2[4] + q1[1] * q2[6] - q1[2] * q2[5],
+    q1[1] * q2[7] + q1[3] * q2[5] + q1[2] * q2[4] - q1[0] * q2[6],
+    q1[2] * q2[7] + q1[3] * q2[6] + q1[0] * q2[5] - q1[1] * q2[4],
+    q1[3] * q2[7] - q1[0] * q2[4] - q1[1] * q2[5] - q1[2] * q2[6]
+  })
+end
+
+function mathkit.quat2.rot_by_axis(q: quat2, axis: vec3, rad: number): quat2
+  if math.abs(rad) < 0.000001 then
+    return q
+  end
+  
+  local axis_len: number = math.sqrt(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z)
+  local s: number = math.sin(rad * 0.5)
+  
+  local bx: number = (s * axis.x) / axis_len
+  local by: number = (s * axis.y) / axis_len
+  local bz: number = (s * axis.z) / axis_len
+  local bw: number = math.cos(rad * 0.5)
+  
+  return mathkit.quat2.create({
+    q[0] * bw + q[3] * bx + q[1] * bz - q[2] * by,
+    q[1] * bw + q[3] * by + q[2] * bx - q[0] * bz,
+    q[2] * bw + q[3] * bz + q[0] * by - q[1] * bx,
+    q[3] * bw - q[0] * bx - q[1] * by - q[2] * bz,
+    q[4] * bw + q[7] * bx + q[5] * bz - q[6] * by,
+    q[5] * bw + q[7] * by + q[6] * bx - q[4] * bz,
+    q[6] * bw + q[7] * bz + q[4] * by - q[5] * bx,
+    q[7] * bw - q[4] * bx - q[5] * by - q[6] * bz
+  })
+end
+
+function mathkit.quat2.from_quat(q: quat): quat2
+  return mathkit.quat2.create({
+    q[0],
+    q[1],
+    q[2],
+    q[3],
+    0,
+    0,
+    0,
+    0
+  })
+end
+
+function mathkit.quat2.from_axis_angle(q: quat, v: vec3): quat2
+  return mathkit.quat2.create({
+    q[0],
+    q[1],
+    q[2],
+    q[3],
+    (v.x * 0.5) * q[3] + (v.y * 0.5) * q[2] - (v.z * 0.5) * q[1],
+    (v.y * 0.5) * q[3] + (v.z * 0.5) * q[0] - (v.x * 0.5) * q[2],
+    (v.z * 0.5) * q[3] + (v.x * 0.5) * q[1] - (v.y * 0.5) * q[0],
+    -(v.x * 0.5) * q[0] - (v.y * 0.5) * q[1] - (v.z * 0.5) * q[2]
+  })
+end
+
+function mathkit.quat2.to_axis(q: quat2): vec3
+  return (@vec3) {
+    x = (q[4] * q[3] + q[7] * -q[0] + q[5] * -q[2] - q[6] * -q[1]) * 2,
+    y = (q[5] * q[3] + q[7] * -q[1] + q[6] * -q[0] - q[4] * -q[2]) * 2,
+    z = (q[6] * q[3] + q[7] * -q[2] + q[4] * -q[1] - q[5] * -q[0]) * 2
+  }
+end
+
+--------------------------------------------------------------------
+--------------------------- module: mat2 ---------------------------
+--------------------------------------------------------------------
+function mathkit.mat2.id(): mat2
+  return mathkit.mat2.create({ 1, 0, 0, 1 })
+end
+
+function mathkit.mat2.inv(m: mat2): mat2
+  local det: number = m[0] * m[3] - m[2] * m[1]
+  
+  return mathkit.mat2.create({
+    m[3] * (1 / det),
+    -m[1] * (1 / det),
+    -m[2] * (1 / det),
+    m[0] * (1 / det)
+  })
+end
+
+function mathkit.mat2.adjoint(m: mat2): mat2
+  return mathkit.mat2.create({ m[3], -m[1], -m[2], m[0] })
+end
+
+function mathkit.mat2.neg(m: mat2): mat2
+  return mathkit.mat2.create({ -m[0], -m[1], -m[2], -m[3] })
+end
+
+function mathkit.mat2.zero(): mat2
+  return mathkit.mat2.create({ 0, 0, 0, 0 })
+end
+
+function mathkit.mat2.one(): mat2
+  return mathkit.mat2.create({ 1, 1, 1, 1 })
+end
+
+function mathkit.mat2.det(m: mat2): number
+  return m[0] * m[3] - m[2] * m[1]
+end
+
+function mathkit.mat2.mult(m1: mat2, m2: mat2): mat2
+  return mathkit.mat2.create({
+    m1[0] * m2[0] + m1[2] * m2[1],
+    m1[1] * m2[0] + m1[3] * m2[1],
+    m1[0] * m2[2] + m1[2] * m2[3],
+    m1[1] * m2[2] + m1[3] * m2[3]
+  })
+end
+
+function mathkit.mat2.add(m1: mat2, m2: mat2): mat2
+  return mathkit.mat2.create({
+    m1[0] + m2[0],
+    m1[1] + m2[1],
+    m1[2] + m2[2],
+    m1[3] + m2[3]
+  })
+end
+
+function mathkit.mat2.sub(m1: mat2, m2: mat2): mat2
+  return mathkit.mat2.create({
+    m1[0] - m2[0],
+    m1[1] - m2[1],
+    m1[2] - m2[2],
+    m1[3] - m2[3]
+  })
+end
+
+function mathkit.mat2.tostring(m: mat2): string
+  return "mat2(" .. m[0] .. ", " .. m[1] .. ", " .. m[2] .. ", " .. m[3] .. ")"
+end
+
+function mathkit.mat2.equ(m1: mat2, m2: mat2): boolean
+  return (m1[0] == m2[0]) and (m1[1] == m2[1]) and (m1[2] == m2[2]) and (m1[3] == m2[3]) 
+end
+
+function mathkit.mat2.rotate(m: mat2, rad: number): mat2
+  local s: number = math.sin(rad)
+  local c: number = math.cos(rad)
+  
+  return mathkit.mat2.create({
+    m[0] * c + m[2] * s,
+    m[1] * c + m[3] * s,
+    m[0] * -s + m[2] * c,
+    m[1] * -s + m[3] * c
+  })
+end
+
+function mathkit.mat2.vscale(m: mat2, v: vec2): mat2
+  return mathkit.mat2.create({
+    m[0] * v.x,
+    m[1] * v.x,
+    m[2] * v.y,
+    m[3] * v.y
+  })
+end
+
+function mathkit.mat2.scale(m: mat2, scalar: number): mat2
+  return mathkit.mat2.create({
+    m[0] * scalar,
+    m[1] * scalar,
+    m[2] * scalar,
+    m[3] * scalar
+  })
+end
+
+function mathkit.mat2.vscale_and_add(m1: mat2, m2: mat2, scalar: number): mat2
+  return mathkit.mat2.create({
+    (m1[0] + m2[0]) * scalar,
+    (m1[1] + m2[1]) * scalar,
+    (m1[2] + m2[2]) * scalar,
+    (m1[3] + m2[3]) * scalar
+  })
+end
+
+function mathkit.mat2.from_rad(rad: number): mat2
+  local s: number = math.sin(rad)
+  local c: number = math.cos(rad)
+  
+  return mathkit.mat2.create({ c, s, -s, c })
+end
+
+function mathkit.mat2.from_scale(v: vec2): mat2
+  return mathkit.mat2.create({ v.x, 0, 0, v.y })
+end
+
+function mathkit.mat2.frob(m: mat2): number
+  return math.sqrt(m[0] * m[0] + m[1] * m[1] + m[2] * m[2] + m[3] * m[3])
+end
+
+function mathkit.mat2.ldu(l: *mat2, d: *mat2, u: *mat2, a: mat2): [3]*mat2
+  l[2] = a[2] / a[0]
+  u[0] = a[0]
+  u[1] = a[1]
+  u[3] = a[3] - l[2] * u[1]
+  
+  return { l, d, u }
+end
+
+--------------------------------------------------------------------
+--------------------------- module: mat2d --------------------------
+--------------------------------------------------------------------
+function mathkit.mat2d.id(): mat2d
+  return mathkit.mat2d.create({ 1, 0, 0, 1, 0, 0 })
+end
+
+function mathkit.mat2d.inv(m: mat2d): mat2d
+  local det: number = m[0] * m[3] - m[1] * m[2]
+
+  return mathkit.mat2d.create({
+    m[3] * (1 / det),
+    -m[1] * (1 / det),
+    -m[2] * (1 / det),
+    m[0] * (1 / det),
+    (m[2] * m[5] - m[3] * m[4]) * (1 / det),
+    (m[1] * m[4] - m[0] * m[5]) * (1 / det)
+  })
+end
+
+function mathkit.mat2d.det(m: mat2d): number
+  return m[0] * m[3] - m[1] * m[2]
+end
+
+function mathkit.mat2d.neg(m: mat2d): mat2d
+  return mathkit.mat2d.create({ -m[0], -m[1], -m[2], -m[3], -m[4], -m[5] })
+end
+
+function mathkit.mat2d.zero(): mat2d
+  return mathkit.mat2d.create({ 0, 0, 0, 0, 0, 0 })
+end
+
+function mathkit.mat2d.one(): mat2d
+  return mathkit.mat2d.create({ 1, 1, 1, 1, 1, 1 })
+end
+
+function mathkit.mat2d.mul(m1: mat2d, m2: mat2d): mat2d
+  return mathkit.mat2d.create({
+    m1[0] * m2[0] + m1[2] * m2[1],
+    m1[1] * m2[0] + m1[3] * m2[1],
+    m1[0] * m2[2] + m1[2] * m2[3],
+    m1[1] * m2[2] + m1[3] * m2[3],
+    m1[0] * m2[4] + m1[2] * m2[5] + m1[4],
+    m1[1] * m2[4] + m1[3] * m2[5] + m1[5]
+  })
+end
+
+function mathkit.mat2d.rotate(m: mat2d, rad: number): mat2d
+  local s: number = math.sin(rad)
+  local c: number = math.cos(rad)
+  
+  return mathkit.mat2d.create({
+    m[0] * c + m[2] * s,
+    m[1] * c + m[3] * s,
+    m[0] * -s + m[2] * c,
+    m[1] * -s + m[3] * c,
+    m[4],
+    m[5]
+  })
+end
+
+function mathkit.mat2d.vscale(m: mat2d, v: vec2): mat2d
+  return mathkit.mat2d.create({
+    m[0] * v.x,
+    m[1] * v.x,
+    m[2] * v.y,
+    m[3] * v.y,
+    m[4],
+    m[5]
+  })
+end
+
+function mathkit.mat2d.scale(m: mat2d, scalar: number): mat2d
+  return mathkit.mat2d.create({
+    m[0] * scalar,
+    m[1] * scalar,
+    m[2] * scalar,
+    m[3] * scalar,
+    m[4] * scalar,
+    m[5] * scalar
+  })
+end
+
+function mathkit.mat2d.scale_and_add(m1: mat2d, m2: mat2d, scalar: number): mat2d
+  return mathkit.mat2d.create({
+    (m1[0] + m2[0]) * scalar,
+    (m1[1] + m2[1]) * scalar,
+    (m1[2] + m2[2]) * scalar,
+    (m1[3] + m2[3]) * scalar,
+    (m1[4] + m2[4]) * scalar,
+    (m1[5] + m2[5]) * scalar
+  })
+end
+
+function mathkit.mat2d.translate(m: mat2d, v: vec2): mat2d
+  return mathkit.mat2d.create({
+    m[0],
+    m[1],
+    m[2],
+    m[3],
+    m[0] * v.x + m[2] * v.y + m[4],
+    m[1] * v.x + m[3] * v.y + m[5]
+  })
+end
+
+function mathkit.mat2d.from_rad(rad: number): mat2d
+  local s: number = math.sin(rad)
+  local c: number = math.cos(rad)
+  
+  return mathkit.mat2d.create({ c, s, -s, c, 0, 0 })
+end
+
+function mathkit.mat2d.from_scale(v: vec2): mat2d
+  return mathkit.mat2d.create({ v.x, 0, 0, v.y, 0, 0 })
+end
+
+function mathkit.mat2d.from_translation(v: vec2): mat2d
+  return mathkit.mat2d.create({ 1, 0, 0, 1, v.x, v.y })
+end
+
+function mathkit.mat2d.tostring(m: mat2d): string
+  return "mat2d(" .. m[0] .. ", " .. m[1] .. ", " .. m[2] .. ", " .. m[3] .. ", " .. m[4] .. ", " .. m[5] .. ")"
+end
+
+function mathkit.mat2d.frob(m: mat2d): number
+  return math.sqrt(m[0] * m[0] + m[1] * m[1] + m[2] * m[2] + m[3] * m[3] + m[4] * m[4] + m[5] * m[5] + 1 * 1)
+end
+
+function mathkit.mat2d.add(m1: mat2d, m2: mat2d): mat2d
+  return mathkit.mat2d.create({
+    m1[0] + m2[0],
+    m1[1] + m2[1],
+    m1[2] + m2[2],
+    m1[3] + m2[3],
+    m1[4] + m2[4],
+    m1[5] + m2[5]
+  })
+end
+
+function mathkit.mat2d.sub(m1: mat2d, m2: mat2d): mat2d
+  return mathkit.mat2d.create({
+    m1[0] - m2[0],
+    m1[1] - m2[1],
+    m1[2] - m2[2],
+    m1[3] - m2[3],
+    m1[4] - m2[4],
+    m1[5] - m2[5]
+  })
+end
+
+function mathkit.mat2d.equ(m1: mat2d, m2: mat2d): boolean
+  return (m1[0] == m2[0]) and
+         (m1[1] == m2[1]) and
+         (m1[2] == m2[2]) and
+         (m1[3] == m2[3]) and
+         (m1[4] == m2[4]) and
+         (m1[5] == m2[5])
+end
+
+--------------------------------------------------------------------
+--------------------------- module: mat3 ---------------------------
+--------------------------------------------------------------------
+function mathkit.mat3.id(): mat3
+  return mathkit.mat3.create({ 1, 0, 0, 0, 1, 0, 0, 0, 1 })
+end
+
+function mathkit.mat3.neg(m: mat3): mat3
+  return mathkit.mat3.create({ -m[0], -m[1], -m[2], -m[3], -m[4], -m[5], -m[6], -m[7], -m[8] })
+end
+
+function mathkit.mat3.zero(): mat3
+  return mathkit.mat3.create({ 0, 0, 0, 0, 0, 0, 0, 0, 0 })
+end
+
+function mathkit.mat3.one(): mat3
+  return mathkit.mat3.create({ 1, 1, 1, 1, 1, 1, 1, 1, 1 })
+end
+
+function mathkit.mat3.from_mat4(m: mat4): mat3
+  return mathkit.mat3.create({ m[0], m[1], m[2], m[4], m[5], m[6], m[8], m[9], m[10] })
+end
+
+function mathkit.mat3.tostring(m: mat3): string
+  return "mat3(" .. m[0] .. ", " .. m[1] .. ", " .. m[2] .. ", " .. m[3] .. ", " .. m[4] .. ", " .. m[5] .. ", " .. m[6] .. ", " .. m[7] .. ", " .. m[8] .. ")"
+end
+
+function mathkit.mat3.add(m1: mat3, m2: mat3): mat3
+  return mathkit.mat3.create({
+    m1[0] + m2[0],
+    m1[1] + m2[1],
+    m1[2] + m2[2],
+    m1[3] + m2[3],
+    m1[4] + m2[4],
+    m1[5] + m2[5],
+    m1[6] + m2[6],
+    m1[7] + m2[7],
+    m1[8] + m2[8]
+  })
+end
+
+function mathkit.mat3.sub(m1: mat3, m2: mat3): mat3
+  return mathkit.mat3.create({
+    m1[0] - m2[0],
+    m1[1] - m2[1],
+    m1[2] - m2[2],
+    m1[3] - m2[3],
+    m1[4] - m2[4],
+    m1[5] - m2[5],
+    m1[6] - m2[6],
+    m1[7] - m2[7],
+    m1[8] - m2[8]
+  })
+end
+
+function mathkit.mat3.scale(m: mat3, scalar: number): mat3
+  return mathkit.mat3.create({
+    m[0] * scalar,
+    m[1] * scalar,
+    m[2] * scalar,
+    m[3] * scalar,
+    m[4] * scalar,
+    m[5] * scalar,
+    m[6] * scalar,
+    m[7] * scalar,
+    m[8] * scalar
+  })
+end
+
+function mathkit.mat3.scale_and_add(m1: mat3, m2: mat3, scalar: number): mat3
+  return mathkit.mat3.create({
+    (m1[0] + m2[0]) * scalar,
+    (m1[1] + m2[1]) * scalar,
+    (m1[2] + m2[2]) * scalar,
+    (m1[3] + m2[3]) * scalar,
+    (m1[4] + m2[4]) * scalar,
+    (m1[5] + m2[5]) * scalar,
+    (m1[6] + m2[6]) * scalar,
+    (m1[7] + m2[7]) * scalar,
+    (m1[8] + m2[8]) * scalar
+  })
+end
+
+function mathkit.mat3.equ(m1: mat3, m2: mat3): boolean
+  return (m1[0] == m2[0]) and (m1[1] == m2[1]) and (m1[2] == m2[2]) and (m1[3] == m2[3]) and (m1[4] == m2[4]) and (m1[5] == m2[5]) and (m1[6] == m2[6]) and (m1[7] == m2[7]) and (m1[8] == m2[8])
+end
+
+function mathkit.mat3.inv(m: mat3): mat3
+  local b01: number = m[8] * m[4] - m[5] * m[7]
+  local b11: number = -m[8] * m[3] + m[5] * m[6]
+  local b21: number = m[7] * m[3] - m[4] * m[6]
+  local det: number = m[0] * b01 + m[1] * b11 + m[2] * b21
+  
+  return mathkit.mat3.create({
+    b01 * (1 / det),
+    (-m[8] * m[1] + m[2] * m[7]) * (1 / det),
+    (m[5] * m[1] - m[2] * m[4]) * (1 / det),
+    b11 * (1 / det),
+    (m[8] * m[0] - m[2] * m[6]) * (1 / det),
+    (-m[5] * m[0] + m[2] * m[3]) * (1 / det),
+    b21 * (1 / det),
+    (-m[7] * m[0] + m[1] * m[6]) * (1 / det),
+    (m[4] * m[0] - m[1] * m[3]) * (1 / det)
+  })
+end
+
+function mathkit.mat3.adjoint(m: mat3): mat3
+  return mathkit.mat3.create({
+    m[4] * m[8] - m[5] * m[7],
+    m[2] * m[7] - m[1] * m[8],
+    m[1] * m[5] - m[2] * m[4],
+    m[5] * m[6] - m[3] * m[8],
+    m[0] * m[8] - m[2] * m[6],
+    m[2] * m[3] - m[0] * m[5],
+    m[3] * m[7] - m[4] * m[6],
+    m[1] * m[6] - m[0] * m[7],
+    m[0] * m[4] - m[1] * m[3]
+  })
+end
+
+function mathkit.mat3.det(m: mat3): number
+  return (m[0] * (m[8] * m[4] - m[5] * m[7]) + m[1] * (-m[8] * m[3] + m[5] * m[6]) + m[2] * (m[7] * m[3] - m[4] * m[6]))
+end
+
+function mathkit.mat3.mul(m1: mat3, m2: mat3): mat3
+  return mathkit.mat3.create({
+    m2[0] * m1[0] + m2[1] * m1[3] + m2[2] * m1[6],
+    m2[0] * m1[1] + m2[1] * m1[4] + m2[2] * m1[7],
+    m2[0] * m1[2] + m2[1] * m1[5] + m2[2] * m1[8],
+    m2[3] * m1[0] + m2[4] * m1[3] + m2[5] * m1[6],
+    m2[3] * m1[1] + m2[4] * m1[4] + m2[5] * m1[7],
+    m2[3] * m1[2] + m2[4] * m1[5] + m2[5] * m1[8],
+    m2[6] * m1[0] + m2[7] * m1[3] + m2[8] * m1[6],
+    m2[6] * m1[1] + m2[7] * m1[4] + m2[8] * m1[7],
+    m2[6] * m1[2] + m2[7] * m1[5] + m2[8] * m1[8]
+  })
+end
+
+function mathkit.mat3.translate(m: mat3, v: vec2): mat3
+  return mathkit.mat3.create({
+    m[0],
+    m[1],
+    m[2],
+    m[3],
+    m[4],
+    m[5],
+    v.x * m[0] + v.y * m[3] + m[6],
+    v.x * m[1] + v.y * m[4] + m[7],
+    v.x * m[2] + v.y * m[5] + m[8]
+  })
+end
+
+function mathkit.mat3.rotate(m: mat3, rad: number): mat3
+  local s: number = math.sin(rad)
+  local c: number = math.cos(rad)
+  
+  return mathkit.mat3.create({
+    c * m[0] + s * m[3],
+    c * m[1] + s * m[4],
+    c * m[2] + s * m[5],
+    c * m[3] - s * m[0],
+    c * m[4] - s * m[1],
+    c * m[5] - s * m[2],
+    m[6],
+    m[7],
+    m[8]
+  })
+end
+
+function mathkit.mat3.vscale(m: mat3, v: vec2): mat3
+  return mathkit.mat3.create({
+    v.x * m[0],
+    v.x * m[1],
+    v.x * m[2],
+    v.y * m[3],
+    v.y * m[4],
+    v.y * m[5],
+    m[6],
+    m[7],
+    m[8]
+  })
+end
+
+function mathkit.mat3.frob(m: mat3): number
+  return math.sqrt(m[0] * m[0] + m[1] * m[1] + m[2] * m[2] + m[3] * m[3] + m[4] * m[4] + m[5] * m[5] + m[6] * m[6] + m[7] * m[7] + m[8] * m[8])
+end
+
+function mathkit.mat3.from_mat2d(m: mat2d): mat3
+  return mathkit.mat3.create({ m[0], m[1], 0, m[2], m[3], 0, m[4], m[5], 1 })
+end
+
+function mathkit.mat3.from_translation(v: vec2): mat3
+  return mathkit.mat3.create({ 1, 0, 0, 0, 1, 0, v.x, v.y, 1 })
+end
+
+function mathkit.mat3.from_scale(v: vec2): mat3
+  return mathkit.mat3.create({ v.x, 0, 0, 0, v.y, 0, 0, 0, 1 })
+end
+
+function mathkit.mat3.from_rad(rad: number): mat3
+  local s: number = math.sin(rad)
+  local c: number = math.sin(rad)
+  
+  return mathkit.mat3.create({ c, s, 0, -s, c, 0, 0, 0, 1 })
+end
+
+function mathkit.mat3.from_quat(q: quat): mat3
+  return mathkit.mat3.create({
+    1 - (q[1] * (q[1] + q[1])) - (q[2] * (q[2] + q[2])),
+    (q[1] * (q[0] + q[0])) + (q[3] * (q[2] + q[2])),
+    (q[2] * (q[0] + q[0])) - (q[3] * (q[1] + q[1])),
+    (q[1] * (q[0] + q[0])) - (q[3] * (q[2] + q[2])),
+    1 - (q[0] * (q[0] + q[0])) - (q[2] * (q[2] + q[2])),
+    (q[2] * (q[1] + q[1])) + (q[3] * (q[0] + q[0])),
+    (q[2] * (q[0] + q[0])) + (q[3] * (q[1] + q[1])),
+    (q[2] * (q[1] + q[1])) - (q[3] * (q[0] + q[0])),
+    1 - (q[0] * (q[0] + q[0])) - (q[1] * (q[1] + q[1]))
+  })
+end
+
+function mathkit.mat3.norm_from_mat4(m: mat4): mat3
+  local b00: number = m[0] * m[5] - m[1] * m[4]
+  local b01: number = m[0] * m[6] - m[2] * m[4]
+  local b02: number = m[0] * m[7] - m[3] * m[4]
+  local b03: number = m[1] * m[6] - m[2] * m[5]
+  local b04: number = m[1] * m[7] - m[3] * m[5]
+  local b05: number = m[2] * m[7] - m[3] * m[6]
+  local b06: number = m[8] * m[13] - m[9] * m[12]
+  local b07: number = m[8] * m[14] - m[10] * m[12]
+  local b08: number = m[8] * m[15] - m[11] * m[12]
+  local b09: number = m[9] * m[14] - m[10] * m[13]
+  local b10: number = m[9] * m[15] - m[11] * m[13]
+  local b11: number = m[10] * m[15] - m[11] * m[14]
+  
+  local det: number = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06
+  
+  return mathkit.mat3.create({
+    (m[5] * b11 - m[6] * b10 + m[7] * b09) * (1 / det),
+    (m[6] * b08 - m[4] * b11 - m[7] * b07) * (1 / det),
+    (m[4] * b10 - m[5] * b08 + m[7] * b06) * (1 / det),
+    (m[2] * b10 - m[1] * b11 - m[3] * b09) * (1 / det),
+    (m[0] * b11 - m[2] * b08 + m[3] * b07) * (1 / det),
+    (m[1] * b08 - m[0] * b10 - m[3] * b06) * (1 / det),
+    (m[13] * b05 - m[14] * b04 + m[15] * b03) * (1 / det),
+    (m[14] * b02 - m[12] * b05 - m[15] * b01) * (1 / det),
+    (m[12] * b04 - m[13] * b02 + m[15] * b00) * (1 / det)
+  })
+end
+
+function mathkit.mat3.proj(w: number, h: number): mat3
+  return mathkit.mat3.create({ 2 / w, 0, 0, 0, -2 / h, 0, -1, 1, 1 })
+end
+
+--------------------------------------------------------------------
+--------------------------- module: mat4 ---------------------------
+--------------------------------------------------------------------
+function mathkit.mat4.id(): mat4
+  return mathkit.mat4.create({ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 })
+end
+
+function mathkit.mat4.zero(): mat4
+  return mathkit.mat4.create({ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 })
+end
+
+function mathkit.mat4.one(): mat4
+  return mathkit.mat4.create({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 })
+end
+
+function mathkit.mat4.neg(m: mat4): mat4
+  return mathkit.mat4.create({
+    -m[0],
+    -m[1],
+    -m[2],
+    -m[3],
+    -m[4],
+    -m[5],
+    -m[6],
+    -m[7],
+    -m[8],
+    -m[9],
+    -m[10],
+    -m[11],
+    -m[12],
+    -m[13],
+    -m[14],
+    -m[15]
+  })
+end
+
+function mathkit.mat4.trace(m: mat4): number
+  return m[0] + m[5] + m[10] + m[15]
+end
+
+function mathkit.mat4.transpose(m: mat4): mat4
+  return mathkit.mat4.create({
+    m[0],
+    m[4],
+    m[8],
+    m[12],
+    m[1],
+    m[5],
+    m[9],
+    m[13],
+    m[2],
+    m[6],
+    m[10],
+    m[14],
+    m[3],
+    m[7],
+    m[11],
+    m[15]
+  })
+end
+
+function mathkit.mat4.add(m1: mat4, m2: mat4): mat4
+  return mathkit.mat4.create({
+    m1[0] + m2[0],
+    m1[1] + m2[1],
+    m1[2] + m2[2],
+    m1[3] + m2[3],
+    m1[4] + m2[4],
+    m1[5] + m2[5],
+    m1[6] + m2[6],
+    m1[7] + m2[7],
+    m1[8] + m2[8],
+    m1[9] + m2[9],
+    m1[10] + m2[10],
+    m1[11] + m2[11],
+    m1[12] + m2[12],
+    m1[13] + m2[13],
+    m1[14] + m2[14],
+    m1[15] + m2[15]
+  })
+end
+
+function mathkit.mat4.sub(m1: mat4, m2: mat4): mat4
+  return mathkit.mat4.create({
+    m1[0] - m2[0],
+    m1[1] - m2[1],
+    m1[2] - m2[2],
+    m1[3] - m2[3],
+    m1[4] - m2[4],
+    m1[5] - m2[5],
+    m1[6] - m2[6],
+    m1[7] - m2[7],
+    m1[8] - m2[8],
+    m1[9] - m2[9],
+    m1[10] - m2[10],
+    m1[11] - m2[11],
+    m1[12] - m2[12],
+    m1[13] - m2[13],
+    m1[14] - m2[14],
+    m1[15] - m2[15]
+  })
+end
+
+function mathkit.mat4.tostring(m: mat4): string
+  return "mat4(" .. m[0] .. ", " .. m[1] .. ", " .. m[2] .. ", " .. m[3] .. ", " .. m[4] .. ", " .. m[5] .. ", " .. m[6] .. ", " .. m[7] .. ", " .. m[8] .. ", " .. m[9] .. ", " .. m[10] .. ", " .. m[11] .. ", " .. m[12] .. ", " .. m[13] .. ", " .. m[14] .. ", " .. m[15] .. ")"
+end
+
+function mathkit.mat4.frob(m: mat4): number
+  return math.sqrt(m[0] * m[0] + m[1] * m[1] + m[2] * m[2] + m[3] * m[3] + m[4] * m[4] + m[5] * m[5] + m[6] * m[6] + m[7] * m[7] + m[8] * m[8] + m[9] * m[9] + m[10] * m[10] + m[11] * m[11] + m[12] * m[12] + m[13] * m[13] + m[14] * m[14] + m[15] * m[15])
+end
+
+function mathkit.mat4.scale(m: mat4, scalar: number): mat4
+  return mathkit.mat4.create({
+    m[0] * scalar,
+    m[1] * scalar,
+    m[2] * scalar,
+    m[3] * scalar,
+    m[4] * scalar,
+    m[5] * scalar,
+    m[6] * scalar,
+    m[7] * scalar,
+    m[8] * scalar,
+    m[9] * scalar,
+    m[10] * scalar,
+    m[11] * scalar,
+    m[12] * scalar,
+    m[13] * scalar,
+    m[14] * scalar,
+    m[15] * scalar
+  })
+end
+
+function mathkit.mat4.scale_and_add(m1: mat4, m2: mat4, scalar: number): mat4
+  return mathkit.mat4.create({
+    (m1[0] + m2[0]) * scalar,
+    (m1[1] + m2[1]) * scalar,
+    (m1[2] + m2[2]) * scalar,
+    (m1[3] + m2[3]) * scalar,
+    (m1[4] + m2[4]) * scalar,
+    (m1[5] + m2[5]) * scalar,
+    (m1[6] + m2[6]) * scalar,
+    (m1[7] + m2[7]) * scalar,
+    (m1[8] + m2[8]) * scalar,
+    (m1[9] + m2[9]) * scalar,
+    (m1[10] + m2[10]) * scalar,
+    (m1[11] + m2[11]) * scalar,
+    (m1[12] + m2[12]) * scalar,
+    (m1[13] + m2[13]) * scalar,
+    (m1[14] + m2[14]) * scalar,
+    (m1[15] + m2[15]) * scalar
+  })
+end
+
+function mathkit.mat4.equ(m1: mat4, m2: mat4): boolean
+  return (m1[0] == m2[0]) and
+         (m1[1] == m2[1]) and
+         (m1[2] == m2[2]) and
+         (m1[3] == m2[3]) and
+         (m1[4] == m2[4]) and
+         (m1[5] == m2[5]) and
+         (m1[6] == m2[6]) and
+         (m1[7] == m2[7]) and
+         (m1[8] == m2[8]) and
+         (m1[9] == m2[9]) and
+         (m1[10] == m2[10]) and
+         (m1[11] == m2[11]) and
+         (m1[12] == m2[12]) and
+         (m1[13] == m2[13]) and
+         (m1[14] == m2[14]) and
+         (m1[15] == m2[15])
+end
+
+function mathkit.mat4.inv(m: mat4): mat4
+  local b00: number = m[0] * m[5] - m[1] * m[4]
+  local b01: number = m[0] * m[6] - m[2] * m[4]
+  local b02: number = m[0] * m[7] - m[3] * m[4]
+  local b03: number = m[1] * m[6] - m[2] * m[5]
+  local b04: number = m[1] * m[7] - m[3] * m[5]
+  local b05: number = m[2] * m[7] - m[3] * m[6]
+  local b06: number = m[8] * m[13] - m[9] * m[12]
+  local b07: number = m[8] * m[14] - m[10] * m[12]
+  local b08: number = m[8] * m[15] - m[11] * m[12]
+  local b09: number = m[9] * m[14] - m[10] * m[13]
+  local b10: number = m[9] * m[15] - m[11] * m[13]
+  local b11: number = m[10] * m[15] - m[11] * m[14]
+  
+  local det: number = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06
+  
+  return mathkit.mat4.create({
+    (m[5] * b11 - m[6] * b10 + m[7] * b09) * (1 / det),
+    (m[2] * b10 - m[1] * b11 - m[3] * b09) * (1 / det),
+    (m[13] * b05 - m[14] * b04 + m[15] * b03) * (1 / det),
+    (m[10] * b04 - m[9] * b05 - m[11] * b03) * (1 / det),
+    (m[6] * b08 - m[4] * b11 - m[7] * b07) * (1 / det),
+    (m[0] * b11 - m[2] * b08 + m[3] * b07) * (1 / det),
+    (m[14] * b02 - m[12] * b05 - m[15] * b01) * (1 / det),
+    (m[8] * b05 - m[10] * b02 + m[11] * b01) * (1 / det),
+    (m[4] * b10 - m[5] * b08 + m[7] * b06) * (1 / det),
+    (m[1] * b08 - m[0] * b10 - m[3] * b06) * (1 / det),
+    (m[12] * b04 - m[13] * b02 + m[15] * b00) * (1 / det),
+    (m[9] * b02 - m[8] * b04 - m[11] * b00) * (1 / det),
+    (m[5] * b07 - m[4] * b09 - m[6] * b06) * (1 / det),
+    (m[0] * b09 - m[1] * b07 + m[2] * b06) * (1 / det),
+    (m[13] * b01 - m[12] * b03 - m[14] * b00) * (1 / det),
+    (m[8] * b03 - m[9] * b01 + m[10] * b00) * (1 / det)
+  })
+end
+
+function mathkit.mat4.adjoint(m: mat4): mat4
+  return mathkit.mat4.create({
+    m[5] * (m[10] * m[15] - m[11] * m[14]) -
+    m[9] * (m[6] * m[15] - m[7] * m[14]) +
+    m[13] * (m[6] * m[11] - m[7] * m[10]),
+    
+    -m[1] * (m[10] * m[15] - m[11] * m[14]) -
+    m[9] * (m[2] * m[15] - m[3] * m[14]) +
+    m[13] * (m[2] * m[11] - m[3] * m[10]),
+    
+    m[1] * (m[6] * m[15] - m[7] * m[14]) -
+    m[5] * (m[2] * m[15] - m[3] * m[14]) +
+    m[13] * (m[2] * m[7] - m[3] * m[6]),
+  
+    -m[1] * (m[6] * m[11] - m[7] * m[10]) -
+    m[5] * (m[2] * m[11] - m[3] * m[10]) +
+    m[9] * (m[2] * m[7] - m[3] * m[6]),
+    
+    -m[4] * (m[10] * m[15] - m[11] * m[14]) -
+    m[8] * (m[6] * m[15] - m[7] * m[14]) +
+    m[12] * (m[6] * m[11] - m[7] * m[10]),
+    
+    m[0] * (m[10] * m[15] - m[11] * m[14]) -
+    m[8] * (m[2] * m[15] - m[3] * m[14]) +
+    m[12] * (m[2] * m[11] - m[3] * m[10]),
+   
+    m[0] * (m[6] * m[15] - m[7] * m[14]) -
+    m[4] * (m[2] * m[15] - m[3] * m[14]) +
+    m[12] * (m[2] * m[7] - m[3] * m[6]),
+    
+    m[0] * (m[6] * m[11] - m[7] * m[10]) -
+    m[4] * (m[2] * m[11] - m[3] * m[10]) +
+    m[8] * (m[2] * m[7] - m[3] * m[6]),
+    
+    m[4] * (m[9] * m[15] - m[11] * m[13]) -
+    m[8] * (m[5] * m[15] - m[7] * m[13]) +
+    m[12] * (m[5] * m[11] - m[7] * m[9]),
+    
+    m[0] * (m[9] * m[15] - m[11] * m[13]) -
+    m[8] * (m[1] * m[15] - m[3] * m[13]) +
+    m[12] * (m[1] * m[11] - m[3] * m[9]),
+    
+    m[0] * (m[5] * m[15] - m[7] * m[13]) -
+    m[4] * (m[1] * m[15] - m[3] * m[13]) +
+    m[12] * (m[1] * m[7] - m[3] * m[5]),
+  
+    m[0] * (m[5] * m[11] - m[7] * m[9]) -
+    m[4] * (m[1] * m[11] - m[3] * m[9]) +
+    m[8] * (m[1] * m[7] - m[3] * m[5]),
+  
+    m[4] * (m[9] * m[14] - m[10] * m[13]) -
+    m[8] * (m[5] * m[14] - m[6] * m[13]) +
+    m[12] * (m[5] * m[10] - m[6] * m[9]),
+    
+    m[0] * (m[9] * m[14] - m[10] * m[13]) -
+    m[8] * (m[1] * m[14] - m[2] * m[13]) +
+    m[12] * (m[1] * m[10] - m[2] * m[9]),
+    
+    m[0] * (m[5] * m[14] - m[6] * m[13]) -
+    m[4] * (m[1] * m[14] - m[2] * m[13]) +
+    m[12] * (m[1] * m[6] - m[2] * m[5]),
+    
+    m[0] * (m[5] * m[10] - m[6] * m[9]) -
+    m[4] * (m[1] * m[10] - m[2] * m[9]) +
+    m[8] * (m[1] * m[6] - m[2] * m[5])
+  })
+end
+
+function mathkit.mat4.det(m: mat4): number
+  local b00: number = m[0] * m[5] - m[1] * m[4]
+  local b01: number = m[0] * m[6] - m[2] * m[4]
+  local b02: number = m[0] * m[7] - m[3] * m[4]
+  local b03: number = m[1] * m[6] - m[2] * m[5]
+  local b04: number = m[1] * m[7] - m[3] * m[5]
+  local b05: number = m[2] * m[7] - m[3] * m[6]
+  local b06: number = m[8] * m[13] - m[9] * m[12]
+  local b07: number = m[8] * m[14] - m[10] * m[12]
+  local b08: number = m[8] * m[15] - m[11] * m[12]
+  local b09: number = m[9] * m[14] - m[10] * m[13]
+  local b10: number = m[9] * m[15] - m[11] * m[13]
+  local b11: number = m[10] * m[15] - m[11] * m[14]
+  
+  return b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06
+end
+
+function mathkit.mat4.translate(m: mat4, v: vec3): mat4
+  return mathkit.mat4.create({
+    m[0],
+    m[1],
+    m[2],
+    m[3],
+    m[4],
+    m[5],
+    m[6],
+    m[7],
+    m[8],
+    m[9],
+    m[10],
+    m[11],
+    m[0] * v.x + m[4] * v.y + m[8] * v.z + m[12],
+    m[1] * v.x + m[5] * v.y + m[9] * v.z + m[13],
+    m[2] * v.x + m[6] * v.y + m[10] * v.z + m[14],
+    m[3] * v.x + m[7] * v.y + m[11] * v.z + m[15]
+  })
+end
+
+function mathkit.mat4.vscale(m: mat4, v: vec3): mat4
+  return mathkit.mat4.create({
+    m[0] * v.x,
+    m[1] * v.x,
+    m[2] * v.x,
+    m[3] * v.x,
+    m[4] * v.y,
+    m[5] * v.y,
+    m[6] * v.y,
+    m[7] * v.y,
+    m[8] * v.z,
+    m[9] * v.z,
+    m[10] * v.z,
+    m[11] * v.z,
+    m[12],
+    m[13],
+    m[14],
+    m[15]
+  })
+end
+
+function mathkit.mat4.mul(m1: mat4, m2: mat4): mat4
+  return mathkit.mat4.create({
+    m2[0] * m1[0] + m2[1] * m1[4] + m2[2] * m1[8] + m2[3] * m1[12],
+    m2[0] * m1[1] + m2[1] * m1[5] + m2[2] * m1[9] + m2[3] * m1[13],
+    m2[0] * m1[2] + m2[1] * m1[6] + m2[2] * m1[10] + m2[3] * m1[14],
+    m2[0] * m1[3] + m2[1] * m1[7] + m2[2] * m1[11] + m2[3] * m1[15],
+    m2[4] * m1[0] + m2[5] * m1[4] + m2[6] * m1[8] + m2[7] * m1[12],
+    m2[4] * m1[1] + m2[5] * m1[5] + m2[6] * m1[9] + m2[7] * m1[13],
+    m2[4] * m1[2] + m2[5] * m1[6] + m2[6] * m1[10] + m2[7] * m1[14],
+    m2[4] * m1[3] + m2[5] * m1[7] + m2[6] * m1[11] + m2[7] * m1[15],
+    m2[8] * m1[0] + m2[9] * m1[4] + m2[10] * m1[8] + m2[11] * m1[12],
+    m2[8] * m1[1] + m2[9] * m1[5] + m2[10] * m1[9] + m2[11] * m1[13],
+    m2[8] * m1[2] + m2[9] * m1[6] + m2[10] * m1[10] + m2[11] * m1[14],
+    m2[8] * m1[3] + m2[9] * m1[7] + m2[10] * m1[11] + m2[11] * m1[15],
+    m2[12] * m1[0] + m2[13] * m1[4] + m2[14] * m1[8] + m2[15] * m1[12],
+    m2[12] * m1[1] + m2[13] * m1[5] + m2[14] * m1[9] + m2[15] * m1[13],
+    m2[12] * m1[2] + m2[13] * m1[6] + m2[14] * m1[10] + m2[15] * m1[14],
+    m2[12] * m1[3] + m2[13] * m1[7] + m2[14] * m1[11] + m2[15] * m1[15]
+  })
+end
+
+function mathkit.mat4.rot(m: mat4, rad: number, axis: vec3): mat4
+  local x: number = axis.x
+  local y: number = axis.y
+  local z: number = axis.z
+  
+  local len: number = 1 / math.sqrt(x * x + y * y + z * z)
+  x = x * len
+  y = y * len
+  z = z * len
+  
+  local s: number = math.sin(rad)
+  local c: number = math.cos(rad)
+  local t: number = 1 - c
+  
+  local b00: number = x * x * t + c
+  local b01: number = y * x * t + z * s
+  local b02: number = z * x * t - y * s
+  local b10: number = x * y * t - z * s
+  local b11: number = y * y * t + c
+  local b12: number = z * y * t + x * s
+  local b20: number = x * z * t + y * s
+  local b21: number = y * z * t - x * s
+  local b22: number = z * z * t + c
+  
+  return mathkit.mat4.create({
+    m[0] * b00 + m[4] * b01 + m[8] * b02,
+    m[1] * b00 + m[5] * b01 + m[9] * b02,
+    m[2] * b00 + m[6] * b01 + m[10] * b02,
+    m[3] * b00 + m[7] * b01 + m[11] * b02,
+    m[0] * b10 + m[4] * b11 + m[8] * b12,
+    m[1] * b10 + m[5] * b11 + m[9] * b12,
+    m[2] * b10 + m[6] * b11 + m[10] * b12,
+    m[3] * b10 + m[7] * b11 + m[11] * b12,
+    m[0] * b20 + m[4] * b21 + m[8] * b22,
+    m[1] * b20 + m[5] * b21 + m[9] * b22,
+    m[2] * b20 + m[6] * b21 + m[10] * b22,
+    m[3] * b20 + m[7] * b21 + m[11] * b22,
+    m[12],
+    m[13],
+    m[14],
+    m[15]
+  })
+end
+
+function mathkit.mat4.rotx(m: mat4, rad: number): mat4
+  local s: number = math.sin(rad)
+  local c: number = math.cos(rad)
+  
+  return mathkit.mat4.create({
+    m[0],
+    m[1],
+    m[2],
+    m[3],
+    m[4] * c + m[8] * s,
+    m[5] * c + m[9] * s,
+    m[6] * c + m[10] * s,
+    m[7] * c + m[11] * s,
+    m[8] * c - m[4] * s,
+    m[9] * c - m[5] * s,
+    m[10] * c - m[6] * s,
+    m[11] * c - m[7] * s,
+    m[12],
+    m[13],
+    m[14],
+    m[15]
+  })
+end
+
+function mathkit.mat4.roty(m: mat4, rad: number): mat4
+  local s: number = math.sin(rad)
+  local c: number = math.cos(rad)
+  
+  return mathkit.mat4.create({
+    m[0] * c - m[8] * s,
+    m[1] * c - m[9] * s,
+    m[2] * c - m[10] * s,
+    m[3] * c - m[11] * s,
+    m[4],
+    m[5],
+    m[6],
+    m[7],
+    m[0] * s + m[8] * c,
+    m[1] * s + m[9] * c,
+    m[2] * s + m[10] * c,
+    m[3] * s + m[11] * c,
+    m[12],
+    m[13],
+    m[14],
+    m[15]
+  })
+end
+
+function mathkit.mat4.rotz(m: mat4, rad: number): mat4
+  local s: number = math.sin(rad)
+  local c: number = math.cos(rad)
+  
+  return mathkit.mat4.create({
+    m[0] * c + m[4] * s,
+    m[1] * c + m[5] * s,
+    m[2] * c + m[6] * s,
+    m[3] * c + m[7] * s,
+    m[4] * c - m[0] * s,
+    m[5] * c - m[1] * s,
+    m[6] * c - m[2] * s,
+    m[7] * c - m[3] * s,
+    m[8],
+    m[9],
+    m[10],
+    m[11],
+    m[12],
+    m[14],
+    m[15]
+  })
+end
+
+function mathkit.mat4.from_translation(v: vec3): mat4
+  return mathkit.mat4.create({ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, v.x, v.y, v.z, 1 })
+end
+
+function mathkit.mat4.from_scale(v: vec3): mat4
+  return mathkit.mat4.create({ v.x, 0, 0, 0, 0, v.y, 0, 0, 0, 0, v.z, 0, 0, 0, 0, 1 })
+end
+
+function mathkit.mat4.from_rot(rad: number, axis: vec3): mat4
+  local x: number = axis.x
+  local y: number = axis.y
+  local z: number = axis.z
+  local len: number = 1 / math.sqrt(x * x + y * y + z * z)
+
+  x = x * len
+  y = y * len
+  z = z * len
+  
+  local s: number = math.sin(rad)
+  local c: number = math.cos(rad)
+  local t: number = 1 - c
+  
+  return mathkit.mat4.create({
+    x * x * t + c,
+    y * x * t + z * s,
+    z * x * t - y * s,
+    0,
+    x * y * t - z * s,
+    y * y * t + c,
+    z * y * t + x * s,
+    0,
+    x * z * t + y * s,
+    y * z * t - x * s,
+    z * z * t + c,
+    0,
+    0,
+    0,
+    0,
+    1
+  })
+end
+
+function mathkit.mat4.from_xrot(rad: number): mat4
+  local s: number = math.sin(rad)
+  local c: number = math.cos(rad)
+  
+  return mathkit.mat4.create({ 1, 0, 0, 0, 0, c, s, 0, 0, -s, c, 0, 0, 0, 0, 1 })
+end
+
+function mathkit.mat4.from_yrot(rad: number): mat4
+  local s: number = math.sin(rad)
+  local c: number = math.cos(rad)
+  
+  return mathkit.mat4.create({ c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, 0, 0, 0, 1 })
+end
+
+function mathkit.mat4.from_zrot(rad: number): mat4
+  local s: number = math.sin(rad)
+  local c: number = math.cos(rad)
+  
+  return mathkit.mat4.create({ c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 })
+end
+
+function mathkit.mat4.from_axis_angle(q: quat, v: vec3): mat4
+  return mathkit.mat4.create({
+    1 - ((q[1] * (q[1] + q[1])) + (q[2] * (q[2] + q[2]))),
+    (q[0] * (q[1] + q[1])) + (q[3] * (q[2] + q[2])),
+    (q[0] * (q[2] + q[2])) - (q[3] * (q[1] + q[1])),
+    0,
+    (q[0] * (q[1] + q[1])) - (q[3] * (q[2] + q[2])),
+    1 - ((q[0] * (q[0] + q[0])) + (q[2] * (q[2] + q[2]))),
+    (q[1] * (q[2] + q[2])) + (q[3] * (q[0] + q[0])),
+    0,
+    (q[0] * (q[2] + q[2])) + (q[3] * (q[1] + q[1])),
+    (q[1] * (q[2] + q[2])) - (q[3] * (q[0] + q[0])),
+    1 - ((q[0] * (q[0] + q[0])) + (q[1] * (q[1] + q[1]))),
+    0,
+    v.x,
+    v.y,
+    v.z,
+    1
+  })
+end
+
+function mathkit.mat4.from_quat2(q: quat2): mat4
+  local translation: vec3 = (@vec3) { x = 0, y = 0, z = 0 }
+  local mag: number = -q[0] * -q[0] + -q[1] * -q[1] + -q[2] * -q[2] + q[3] * q[3]
+  
+  if mag < 0 then
+    translation.x = ((q[4] * q[3] + q[7] * -q[0] + q[5] * -q[2] - q[6] * -q[1]) * 2) / mag
+    translation.y = ((q[5] * q[3] + q[7] * -q[1] + q[6] * -q[0] - q[4] * -q[2]) * 2) / mag
+    translation.z = ((q[6] * q[3] + q[7] * -q[2] + q[4] * -q[1] - q[5] * -q[0]) * 2) / mag
+  else
+    translation.x = (q[4] * q[3] + q[7] * -q[0] + q[5] * -q[2] - q[6] * -q[1]) * 2
+    translation.y = (q[5] * q[3] + q[7] * -q[1] + q[6] * -q[0] - q[4] * -q[2]) * 2
+    translation.z = (q[6] * q[3] + q[7] * -q[2] + q[4] * -q[1] - q[5] * -q[0]) * 2
+  end
+  
+  return mathkit.mat4.from_axis_angle(mathkit.quat.create({ q[0], q[1], q[2], q[3] }), translation)
+end
+
+function mathkit.mat4.scaling(m: mat4): vec3
+  return (@vec3) {
+    x = math.sqrt(m[0] * m[0] + m[1] * m[1] + m[2] * m[2]),
+    y = math.sqrt(m[4] * m[4] + m[5] * m[5] + m[6] * m[6]),
+    z = math.sqrt(m[8] * m[8] * m[9] + m[9] + m[10] * m[10])
+  }
+end
+
+function mathkit.mat4.rotation(m: mat4): quat
+  local scaling: vec3 = mathkit.mat4.scaling(m)
+  
+  local sm11: number = m[0] * (1 / scaling.x)
+  local sm12: number = m[1] * (1 / scaling.y)
+  local sm13: number = m[2] * (1 / scaling.z)
+  local sm21: number = m[4] * (1 / scaling.x)
+  local sm22: number = m[5] * (1 / scaling.y)
+  local sm23: number = m[6] * (1 / scaling.z)
+  local sm31: number = m[8] * (1 / scaling.x)
+  local sm32: number = m[9] * (1 / scaling.y)
+  local sm33: number = m[10] * (1 / scaling.z)
+  
+  local trace: number = sm11 + sm22 + sm33
+  local s: number = 0
+  
+  if trace > 0 then
+    s = math.sqrt(trace + 1) * 2
+    
+    return mathkit.quat.create({
+      (sm23 - sm32) / s,
+      (sm31 - sm13) / s,
+      (sm12 - sm21) / s,
+      0.25 * s
+    })
+  elseif sm11 > sm22 and sm11 > sm33 then
+    s = math.sqrt(1 + sm11 - sm22 - sm33) * 2
+    
+    return mathkit.quat.create({
+      0.25 * s,
+      (sm12 + sm21) / s,
+      (sm31 + sm13) / s,
+      (sm23 - sm32) / s
+    })
+  elseif sm22 > sm33 then
+    s = math.sqrt(1 + sm22 - sm11 - sm33) * 2
+    
+    return mathkit.quat.create({
+      (sm12 + sm21) / s,
+      0.25 * s,
+      (sm23 + sm32) / s,
+      (sm31 - sm13) / s
+    })
+  else
+    s = math.sqrt(1 + sm33 - sm11 - sm22) * 2
+    
+    return mathkit.quat.create({
+      (sm31 + sm13) / s,
+      (sm23 + sm32) / s,
+      0.25 * s,
+      (sm12 - sm21) / s
+    })
+  end
+end
+
+function mathkit.mat4.translation(m: mat4): vec3
+  return (@vec3) {
+    x = m[12],
+    y = m[13],
+    z = m[14]
+  }
+end
+
+function mathkit.mat4.from_axis_angle_scale(q: quat, v: vec3, s: vec3): mat4
+  return mathkit.mat4.create({
+    (1 - ((q[1] * (q[1] + q[1])) + (q[2] * (q[2] + q[2])))) * s.x,
+    ((q[0] * (q[1] + q[1])) + (q[3] * (q[2] + q[2]))) * s.x,
+    ((q[0] * q[2] + q[2]) - (q[3] * (q[1] + q[1]))) * s.x,
+    0,
+    ((q[0] * (q[1] + q[1])) - (q[3] * (q[2] + q[2]))) * s.y,
+    (1 - ((q[0] * (q[0] + q[0])) + (q[2] * (q[2] + q[2])))) * s.y,
+    ((q[1] * (q[2] + q[2])) + (q[3] * (q[0] + q[0]))) * s.y,
+    0,
+    ((q[0] * q[2] + q[2]) + (q[3] * (q[1] + q[1]))) * s.z,
+    ((q[1] * (q[2] + q[2])) - (q[3] * (q[0] + q[0]))) * s.z,
+    (1 - ((q[0] * (q[0] + q[0])) + (q[1] * (q[1] + q[1])))) * s.z,
+    0,
+    v.x,
+    v.y,
+    v.z,
+    1
+  })
+end
+
+function mathkit.mat4.from_axis_angle_scale_origin(q: quat, v: vec3, s: vec3, o: vec3): mat4
+  local out0: number = (1 - ((q[1] * (q[1] + q[1])) + (q[2] * (q[2] + q[2])))) * s.x
+  local out1: number = ((q[0] * (q[1] + q[1])) + (q[3] * (q[2] + q[2]))) * s.x
+  local out2: number = ((q[0] * (q[2] + q[2])) - (q[3] * (q[1] + q[1]))) * s.x
+  local out4: number = ((q[0] * (q[1] + q[1])) - (q[3] * (q[2] + q[2]))) * s.y
+  local out5: number = (1 - ((q[0] * (q[0] + q[0])) + (q[2] * (q[2] + q[2])))) * s.y
+  local out6: number = ((q[1] * (q[2] + q[2])) + (q[3] * (q[0] + q[0]))) * s.y
+  local out8: number = ((q[0] * (q[2] + q[2])) + (q[3] * (q[1] + q[1]))) * s.z
+  local out9: number = ((q[1] * (q[2] + q[2])) - (q[3] * (q[0] + q[0]))) * s.z
+  local out10: number = (1 - ((q[0] * (q[0] + q[0])) + q[1] * (q[1] + q[1]))) * s.z
+  
+  return mathkit.mat4.create({
+    out0,
+    out1,
+    out2,
+    0,
+    out4,
+    out5,
+    out6,
+    0,
+    out8,
+    out9,
+    out10,
+    0,
+    v.x + o.x - (out0 * o.x + out4 * o.y + out8 * o.z),
+    v.y + o.y - (out1 * o.x + out5 * o.y + out9 * o.z),
+    v.z + o.z - (out2 * o.x + out6 * o.y + out10 * o.z),
+    1
+  })
+end
+
+function mathkit.vec3.unproj(src: vec3, proj: mat4, view: mat4): vec3
+  local m1: mat4 = mathkit.mat4.inv(mathkit.mat4.mul(view, proj))
+  local qu: quat = mathkit.quat.transform(mathkit.quat.create({ src.x, src.y, src.z, 1 }), m1)
+  
+  return (@vec3) {
+    x = qu[0] / qu[3],
+    y = qu[1] / qu[3],
+    z = qu[2] / qu[3]
+  }
+end
+
+function mathkit.mat4.from_quat(q: quat): mat4
+  return mathkit.mat4.create({
+    1 - (q[1] * (q[1] + q[1])) - (q[2] * (q[2] + q[2])),
+    (q[1] * (q[0] + q[0])) + (q[3] * (q[2] + q[2])),
+    (q[2] * (q[0] + q[0])) - (q[3] * (q[1] + q[1])),
+    0,
+    (q[1] * (q[0] + q[0])) - (q[3] * (q[2] + q[2])),
+    1 - (q[0] * (q[0] + q[0])) - (q[2] * (q[2] + q[2])),
+    (q[2] * (q[1] + q[1])) + (q[3] * (q[0] + q[0])),
+    0,
+    (q[2] * (q[0] + q[0])) + (q[3] * (q[1] + q[1])),
+    (q[2] * (q[1] + q[1])) - (q[3] * (q[0] + q[0])),
+    1 - (q[0] * (q[0] + q[0])) - (q[1] * (q[1] + q[1])),
+    0,
+    0,
+    0,
+    0,
+    1
+  })
+end
+
+function mathkit.mat4.frustum(left: number, right: number, bottom: number, top: number, near: number, far: number): mat4
+  return mathkit.mat4.create({
+    near * 2 * (1 / (right - left)),
+    0,
+    0,
+    0,
+    0,
+    near * 2 * (1 / (top - bottom)),
+    0,
+    0,
+    (right + left) * (1 / (right - left)),
+    (top + bottom) * (1 / (top - bottom)),
+    (far + near) * (1 / (near - far)),
+    -1,
+    0,
+    0,
+    far * near * 2 * (1 / (near - far)),
+    0
+  })
+end
+
+function mathkit.mat4.perspective(fovy: number, aspect: number, near: number, far: number): mat4
+  local res: mat4 = mathkit.mat4.create({
+    (1 / math.tan(fovy / 2)) / aspect,
+    0,
+    0,
+    0,
+    0,
+    (1 / math.tan(fovy / 2)),
+    0,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    0
+  })
+  
+  if far then
+    res[10] = (far + near) * (1 / (near - far))
+    res[14] = 2 * far * near * (1 / (near - far))
+  else
+    res[10] = -1
+    res[14] = -2 * near
+  end
+  
+  return res
+end
+
+function mathkit.mat4.perspective_from_fov(fov: [4]number, near: number, far: number): mat4
+  local up_tan: number = math.tan((fov[0] * 3.14) / 180)
+  local down_tan: number = math.tan((fov[1] * 3.14) / 180)
+  local left_tan: number = math.tan((fov[2] * 3.14) / 180)
+  local right_tan: number = math.tan((fov[3] * 3.14) / 180)
+  local xscale: number = 2.0 / (left_tan + right_tan)
+  local yscale: number = 2.0 / (up_tan + down_tan)
+  
+  return mathkit.mat4.create({
+    xscale,
+    0,
+    0,
+    0,
+    0,
+    yscale,
+    0,
+    0,
+    -((left_tan - right_tan) * xscale * 0.5),
+    (up_tan - down_tan) * yscale * 0.5,
+    far / (near - far),
+    -1,
+    0,
+    0,
+    (far * near) / (near - far),
+    0
+  })
+end
+
+function mathkit.mat4.ortho(left: number, right: number, bottom: number, top: number, near: number, far: number): mat4
+  local lr: number = 1 / (left - right)
+  local bt: number = 1 / (bottom - top)
+  local nf: number = 1 / (near - far)
+  
+  return mathkit.mat4.create({
+    -2 * lr,
+    0,
+    0,
+    0,
+    0,
+    -2 * bt,
+    0,
+    0,
+    0,
+    0,
+    2 * nf,
+    0,
+    (left + right) * lr,
+    (top + bottom) * bt,
+    (far + near) * nf,
+    1
+  })
+end
+
+function mathkit.mat4.lookat(out, eye: vec3, center: vec3, up: vec3): mat4
+  if math.abs(eye.x - center.x) < 0.000001 and math.abs(eye.y - center.y) < 0.000001 and math.abs(eye.z - center.z) < 0.000001 then
+    return mathkit.mat4.id()
+  end
+  
+  local z0: number = eye.x - center.x
+  local z1: number = eye.y - center.y
+  local z2: number = eye.z - center.z
+  
+  local len: number = 1 / math.sqrt(z0 * z0 + z1 * z1 + z2 * z2)
+  z0 = z0 * len
+  z1 = z1 * len
+  z2 = z2 * len
+  
+  local x0: number = up.y * z2 - up.z * z1
+  local x1: number = up.z * z0 - up.x * z2
+  local x2: number = up.x * z1 - up.y * z0
+  
+  len = math.sqrt(x0 * x0 + x1 * x1 + x2 * x2)
+  
+  if not len then
+    x0 = 0
+    x1 = 0
+    x2 = 0
+  else
+    len = 1 / len
+    x0 = x0 * len
+    x1 = x1 * len
+    x2 = x2 * len
+  end
+  
+  local y0: number = z1 * x2 - z2 * x1
+  local y1: number = z2 * x0 - z0 * x2
+  local y2: number = z0 * x1 - z1 * x0
+  
+  len = math.sqrt(y0 * y0 + y1 * y1 + y2 * y2)
+  
+  if not len then
+    y0 = 0
+    y1 = 0
+    y2 = 0
+  else
+    len = 1 / len
+    y0 = y0 * len
+    y1 = y1 * len
+    y2 = y2 * len
+  end
+  
+  return mathkit.mat4.create({
+    x0,
+    y0,
+    z0,
+    0,
+    x1,
+    y1,
+    z1,
+    0,
+    x2,
+    y2,
+    z2,
+    0,
+    -(x0 * eye.x + x1 * eye.y + x2 * eye.z),
+    -(y0 * eye.x + y1 * eye.y + y2 * eye.z),
+    -(z0 * eye.x + z1 * eye.y + z2 * eye.z)
+  })
+end
+
+function mathkit.mat4.target_to(eye: vec3, target: vec3, up: vec3): mat4
+  local z0: number = eye.x - target.x
+  local z1: number = eye.y - target.y
+  local z2: number = eye.z - target.z
+  
+  local len: number = z0 * z0 + z1 * z1 + z2 * z2
+  
+  if len > 0 then
+    len = 1 / math.sqrt(len)
+    z0 = z0 * len
+    z1 = z1 * len
+    z2 = z2 * len
+  end
+  
+  local x0: number = up.y * z2 - up.z * z1
+  local x1: number = up.z * z0 - up.x * z2
+  local x2: number = up.x * z1 - up.y * z0
+  
+  len = x0 * x0 + x1 * x1 + x2 * x2
+  
+  if len > 0 then
+    len = 1 / math.sqrt(len)
+    x0 = x0 * len
+    x1 = x1 * len
+    x2 = x2 * len
+  end
+  
+  return mathkit.mat4.create({
+    x0,
+    x1,
+    x2,
+    0,
+    z1 * x2 - z2 * x1,
+    z2 * x0 - z0 * x2,
+    z0 * x1 - z1 * x0,
+    0,
+    z0,
+    z1,
+    z2,
+    0,
+    eye.x,
+    eye.y,
+    eye.z,
+    1
+  })
+end
+
+function mathkit.mat4.norm(m: mat4): mat4
+  local det: number = mathkit.mat4.det(m)
+  
+  return mathkit.mat4.create({
+    m[0] / det,
+    m[1] / det,
+    m[2] / det,
+    m[3] / det,
+    m[4] / det,
+    m[5] / det,
+    m[6] / det,
+    m[7] / det,
+    m[8] / det,
+    m[9] / det,
+    m[10] / det,
+    m[11] / det,
+    m[12] / det,
+    m[13] / det,
+    m[14] / det,
+    m[15] / det
+  })
+end
+
+function mathkit.quat2.from_mat4(m: mat4): quat2
+  -- Optimizable?
+  local outer: quat = mathkit.mat4.rotation(m)
+  local tmp: vec3 = mathkit.mat4.translation(m)
+  return mathkit.quat2.from_axis_angle(outer, tmp)
+end

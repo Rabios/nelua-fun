@@ -1,0 +1,733 @@
+require "math"
+
+global easings = @record {}
+global easings.sine = @record {}
+global easings.cubic = @record {}
+global easings.quint = @record {}
+global easings.circ = @record {}
+global easings.elastic = @record {}
+global easings.quad = @record {}
+global easings.quart = @record {}
+global easings.expo = @record {}
+global easings.back = @record {}
+global easings.bounce = @record {}
+
+function easings.check_number(n: auto)
+  ## assert(n.type.is_scalar)
+end
+
+function easings.check_args(...: varargs)
+  ##[[
+    vargs = { ... }
+    vargs_len = #vargs
+    assert(vargs_len == 1 or vargs_len == 4, "ERROR: Parameter not Numeric!")
+  ]]
+  
+  ## for i = 1, vargs_len do
+    easings.check_number(#[select(i, ...)]#)
+  ## end
+end
+
+function easings.linear(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return #[t]#
+  ## elseif vargs_len == 4 then
+    return (#[c]# * #[t]#) / (#[d]# + #[b]#)
+  ## end
+end
+
+function easings.sine.easeIn(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return 1 - math.cos((#[t]# * math.pi) / 2)
+  ## elseif vargs_len == 4 then
+    return (-#[c]# * math.cos(#[t]# / #[d]# * (math.pi / 2)) + #[c]# + #[b]#)
+  ## end
+end
+
+function easings.sine.easeOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return math.sin((#[t]# * math.pi) / 2)
+  ## elseif vargs_len == 4 then
+    return (#[c]# * math.sin(#[t]# / #[d]# * (math.pi / 2)) + #[b]#)
+  ## end
+end
+
+function easings.sine.easeInOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return -(math.cos(math.pi * #[t]#) - 1) / 2
+  ## elseif vargs_len == 4 then
+    return (-#[c]# / 2 * (math.cos(math.pi * #[t]# / #[d]#) - 1) + #[b]#)
+  ## end
+end
+
+function easings.cubic.easeIn(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return math.pow(#[t]#, 3)
+  ## elseif vargs_len == 4 then
+    return (#[c]# * (#[t]# / #[d]#) * #[t]# * #[t]# + #[b]#)
+  ## end
+end
+
+function easings.cubic.easeOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return 1 - math.pow(1 - #[t]#, 3)
+  ## elseif vargs_len == 4 then
+    return (#[c]# *((#[t]# / #[d]# - 1) * #[t]# * #[t]# + 1) + #[b]#)
+  ## end
+end
+
+function easings.cubic.easeInOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    if #[t]# < 0.5 then
+      return 4 * math.pow(#[t]#, 3)
+    else
+      return 1 - math.pow(-2 * #[t]# + 2, 3) / 2
+    end
+  ## elseif vargs_len == 4 then
+    if (#[t]# / (#[d]# / 2)) < 1 then
+      return (#[c]# / 2 * #[t]# * #[t]# * #[t]# + #[b]#)
+    else
+      return (#[c]# / 2 * ((#[t]# - 2) * #[t]# * #[t]# + 2) + #[b]#)
+    end
+  ## end
+end
+
+function easings.quint.easeIn(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return math.pow(#[t]#, 5)
+  ## elseif vargs_len == 4 then
+    return (#[c]# * (#[t]# / #[d]#) * math.pow(#[t]#, 4) + #[b]#)
+  ## end
+end
+
+function easings.quint.easeOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return 1 - math.pow(1 - #[t]#, 5)
+  ## elseif vargs_len == 4 then
+    return (#[c]# * ((#[t]# / #[d]# - 1) * math.pow(#[t]#, 4) + 1) + #[b]#)
+  ## end
+end
+
+function easings.quint.easeInOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    if #[t]# < 0.5 then
+      return 16 * math.pow(#[t]#, 5)
+    else
+      return 1 - math.pow(-2 * #[t]# + 2, 5) / 2
+    end
+  ## elseif vargs_len == 4 then
+    if (#[t]# / (#[d]# / 2)) < 1 then
+      return (#[c]# / 2 * math.pow(#[t]#, 5) + #[b]#)
+    else
+      return (#[c]# / 2 * ((#[t]# - 2) * math.pow(#[t]#, 4) + 2) + #[b]#)
+    end
+  ## end
+end
+
+function easings.circ.easeIn(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return 1 - math.sqrt(1 - math.pow(#[t]#, 2))
+  ## elseif vargs_len == 4 then
+    return (-#[c]# * (math.sqrt(1 - (#[t]# / #[d]#) * #[t]#) - 1) + #[b]#)
+  ## end
+end
+
+function easings.circ.easeOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return math.sqrt(1 - math.pow(#[t]# - 1, 2))
+  ## elseif vargs_len == 4 then
+    return (#[c]# * math.sqrt(1 - (#[t]# / (#[d]# - 1)) * #[t]#) + #[b]#)
+  ## end
+end
+
+function easings.circ.easeInOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    if #[t]# < 0.5 then
+      return (1 - math.sqrt(1 - math.pow(2 * #[t]#, 2))) / 2
+    else
+      return math.sqrt(1 - math.pow(-2 * #[t]# + 2, 2) + 1) / 2
+    end
+  ## elseif vargs_len == 4 then
+    if (#[t]# / (#[d]# / 2)) < 1 then
+      return (-#[c]# / 2 * (math.sqrt(1 - #[t]# * #[t]#) - 1) + #[b]#)
+    else
+      return (#[c]# / 2 * (math.sqrt(1 - (#[t]# - 2) * #[t]#) + 1) + #[b]#)
+    end
+  ## end
+end
+
+function easings.elastic.easeIn(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    if #[t]# == 0 then
+      return 0
+    elseif #[t]# == 1 then
+      return 1
+    else
+      return -math.pow(2, 10 * #[t]# - 10) * math.sin((#[t]# * 10 - 10.75) * ((2 * math.pi) / 3))
+    end
+  ## elseif vargs_len == 4 then
+    if #[t]# == 0 then
+      return #[b]#
+    elseif ((#[t]# / #[d]#) == 1) then
+      return #[b]# + #[c]#
+    else
+      return -((#[c]# * math.pow(2, 10 * (#[t]# - 1))) * math.sin((#[t]# * #[d]# - ((#[d]# * 0.3) / 4)) * (2 * math.pi) / (#[d]# * 0.3))) + #[b]#
+    end
+  ## end
+end
+
+function easings.elastic.easeOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    if #[t]# == 0 then
+      return 0
+    elseif #[t]# == 1 then
+      return 1 
+    else
+      return math.pow(2, -10 * #[t]#) * math.sin((#[t]# * 10 - 0.75) * (2 * math.pi) / 3) + 1
+    end
+  ## elseif vargs_len == 4 then
+    if #[t]# == 0 then
+      return #[b]#
+    elseif ((#[t]# / #[d]#) == 1) then
+      return #[b]# + #[c]#
+    elseif #[t]# < 1 then
+      return -0.5 * ((#[c]# * math.pow(2, 10 * (#[t]# - 1))) * math.sin((#[t]# * #[d]# - ((#[d]# * 0.3) / 4)) * (2 * math.pi) / (#[d]# * 0.3))) + #[b]#
+    else
+      return (#[c]# * math.pow(2, -10 * (#[t]# - 1))) * math.sin((#[t]# * #[d]# - ((#[d]# * 0.3) / 4)) * (2 * math.pi) / (#[d]# * 0.3)) * 0.5 + #[c]# + #[b]#
+    end
+  ## end
+end
+
+function easings.elastic.easeInOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    if #[t]# == 0 then
+      return 0
+    elseif #[t]# == 1 then
+      return 1
+    elseif #[t]# < 0.5 then
+      return -(math.pow(2, 20 * #[t]# - 10) * math.sin((20 * #[t]# - 11.125) * ((2 * math.pi) / 4.5))) / 2
+    else
+      return (math.pow(2, -20 * #[t]# + 10) * math.sin((20 * #[t]# - 11.125) * ((2 * math.pi) / 4.5))) / 2 + 1
+    end
+  ## elseif vargs_len == 4 then
+    if #[t]# == 0 then
+      return #[b]#
+    elseif ((#[t]# / #[d]#) == 1) then
+      return #[b]# + #[c]#
+    elseif #[t]# < 1 then
+      return -0.5 * ((#[c]# * math.pow(2, 10 * (#[t]# - 1))) * math.sin((#[t]# * (#[d]# * (0.3 * 1.5)) - ((#[d]# * (0.3 * 1.5)) / 4)) * (2 * math.pi) / (#[d]# * (0.3 * 1.5)))) + #[b]#
+    else
+	  return (#[c]# * math.pow(2, -10 * (#[t]# - 1))) * math.sin((#[t]# * #[d]# - ((#[d]# * (0.3 * 1.5)) / 4)) * (2 * math.pi) / (#[d]# * (0.3 * 1.5))) * 0.5 + #[c]# + #[b]#
+    end
+  ## end
+end
+
+function easings.quad.easeIn(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return #[t]# * #[t]#
+  ## elseif vargs_len == 4 then
+    return #[c]# * (#[t]# / #[d]#) * #[t]# + #[b]#
+  ## end
+end
+
+function easings.quad.easeOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return 1 - (1 - #[t]#) * (1 - #[t]#)
+  ## elseif vargs_len == 4 then
+    return -#[c]# * (#[t]# / #[d]#) * (#[t]# - 2) + #[b]#
+  ## end
+end
+
+function easings.quad.easeInOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    if #[t]# < 0.5 then
+      return 2 * #[t]# * #[t]#
+    else
+      return 1 - math.pow(-2 * #[t]# + 2, 2) / 2
+    end
+  ## elseif vargs_len == 4 then
+    if (#[t]# / (#[d]# / 2)) < 1 then
+      return #[c]# / 2 * #[t]# * #[t]# + #[b]#
+    else
+      return -#[c]# / 2 * ((#[t]# - 1) * (#[t]# - 2) - 1) + #[b]#
+    end
+  ## end
+end
+
+function easings.quart.easeIn(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return math.pow(#[t]#, 4)
+  ## elseif vargs_len == 4 then
+    return #[c]# * (#[t]# / #[d]#) * math.pow(#[t]#, 3) + #[b]#
+  ## end
+end
+
+function easings.quart.easeOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return 1 - math.pow(1 - #[t]#, 4)
+  ## elseif vargs_len == 4 then
+    return -#[c]# * ((#[t]# / (#[d]# - 1)) * math.pow(#[t]#, 3) - 1) + #[b]#
+  ## end
+end
+
+function easings.quart.easeInOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    if #[t]# < 0.5 then
+      return 8 * math.pow(#[t]#, 4)
+    else
+      return 1 - math.pow(-2 * #[t]# + 2, 4) / 2
+    end
+  ## elseif vargs_len == 4 then
+    if (#[t]# / (#[d]# / 2)) < 1 then
+      return #[c]# / 2 * math.pow(#[t]#, 4) + #[b]#
+    else
+      return -#[c]# / 2 * ((#[t]# - 2) * math.pow(#[t]#, 3) - 2) + #[b]#
+    end
+  ## end
+end
+
+function easings.expo.easeIn(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    if #[t]# == 0 then
+      return 0
+    else
+      return math.pow(2, 10 * #[t]# - 10)
+    end
+  ## elseif vargs_len == 4 then
+    if #[t]# == 0 then
+      return #[b]#
+    else
+      return #[c]# * math.pow(2, 10 * (#[t]# / (#[d]# - 1))) + #[b]#
+    end
+  ## end
+end
+
+function easings.expo.easeOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    if #[t]# == 1 then
+      return 1
+    else
+      return 1 - math.pow(2, -10 * #[t]#)
+    end
+  ## elseif vargs_len == 4 then
+    if #[t]# == #[d]# then
+      return #[b]# + #[c]#
+    else
+      return #[c]# * (-math.pow(2, -10 * #[t]# / #[d]#) + 1) + #[b]#
+    end
+  ## end
+end
+
+function easings.expo.easeInOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    if #[t]# == 0 then
+      return 0
+    elseif #[t]# == 1 then
+      return 1
+    elseif #[t]# < 0.5 then
+      return math.pow(2, 20 * #[t]# - 10) / 2
+    else
+      return (2 - math.pow(2, -20 * #[t]# + 10)) / 2
+    end
+  ## elseif vargs_len == 4 then
+    if #[t]# == 0 then
+      return #[b]#
+    elseif #[t]# == #[d]# then
+      return #[b]# + #[c]#
+    elseif (#[t]# / (#[d]# / 2)) < 1 then
+      return #[c]# / 2 * math.pow(2, 10 * (#[t]# - 1)) + #[b]#
+    else
+      return #[c]# / 2 * (-math.pow(2, -10 * (#[t]# - 1)) + 2) + #[b]#
+    end
+  ## end
+end
+
+function easings.back.easeIn(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return 2.70158 * math.pow(#[t]#, 3) - 1.70158 * #[t]# * #[t]#
+  ## elseif vargs_len == 4 then
+    return #[c]# * (#[t]# / #[d]#) * #[t]# * (2.70158 * #[t]# - 1.70158) + #[b]#
+  ## end
+end
+
+function easings.back.easeOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return 1 + 2.70158 * math.pow(#[t]# - 1, 3) + 1.70158 * math.pow(#[t]# - 1, 2)
+  ## elseif vargs_len == 4 then
+    return #[c]# * ((#[t]# / (#[d]# - 1)) * #[t]# * (2.70158 * #[t]# + 1.70158) + 1) + #[b]#
+  ## end
+end
+
+function easings.back.easeInOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    if #[t]# < 0.5 then
+      return (math.pow(2 * #[t]#, 2) * (((1.70158 * 1.525) + 1) * 2 * #[t]# - (1.70158 * 1.525))) / 2
+    else
+      return (math.pow(2 * #[t]# - 2, 2) * (((1.70158 * 1.525) + 1) * (#[t]# * 2 - 2) + (1.70158 * 1.525)) + 2) / 2
+    end
+  ## elseif vargs_len == 4 then
+    if (#[t]# / (#[d]# / 2)) < 1 then
+      return #[c]# / 2 * (#[t]# * #[t]# * (((1.70158 * 1.525) + 1) * #[t]# - 1.70158)) + #[b]#
+    else
+      return #[c]# / 2 * ((#[t]# - 2) * #[t]# * (((1.70158 * 1.525) + 1) * #[t]# + 1.70158) + 2) + #[b]#
+    end
+  ## end
+end
+
+function easings.bounce.easeIn(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    return 1 - easings.bounce.easeOut(1 - #[t]#)
+  ## elseif vargs_len == 4 then
+    return #[c]# - easings.bounce.easeOut(#[d]# - #[t]#, 0, #[c]#, #[d]#) + #[b]#
+  ## end 
+end
+
+function easings.bounce.easeOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    if #[t]# < (1 / 2.75) then
+      return 7.5625 * #[t]# * #[t]#
+    elseif #[t]# < (2 / 2.75) then
+      return 7.5625 * (#[t]# - (1.5 / 2.75)) * #[t]# + 0.75
+    elseif #[t]# < (2.5 / 2.75) then
+      return 7.5625 * (#[t]# - (2.25 / 2.75)) * #[t]# + 0.9375
+    else
+      return 7.5625 * (#[t]# - (2.625 / 2.75)) * #[t]# + 0.984375
+    end
+  ## elseif vargs_len == 4 then
+    if ((#[t]# / #[d]#) < (1 / 2.75)) then
+      return #[c]# * (7.5625 * #[t]# * #[t]#) + #[b]#
+    elseif (#[t]# < (2 / 2.75)) then
+      return #[c]# * (7.5625 * (#[t]# - (1.5 / 2.75)) * #[t]# + 0.75) + #[b]#
+    elseif (#[t]# < (2.5 / 2.75)) then
+      return #[c]# * (7.5625 * (#[t]# - (2.25 / 2.75)) * #[t]# + 0.9375) + #[b]#
+    else
+      return #[c]# * (7.5625 * (#[t]# - (2.625 / 2.75)) * #[t]# + 0.984375) + #[b]#
+    end
+  ## end
+end
+
+function easings.bounce.easeInOut(...: varargs): auto
+  easings.check_args(...)
+  
+  ##[[
+    local vargs_len = select('#', ...)
+    local t = select(1, ...)
+    local b = select(2, ...)
+    local c = select(3, ...)
+    local d = select(4, ...)
+  ]]
+  
+  ## if vargs_len == 1 then
+    if #[t]# < 0.5 then
+      return (1 - easings.bounce.easeOut(1 - 2 * #[t]#)) / 2
+    else
+      return (1 + easings.bounce.easeOut(2 * #[t]# - 1)) / 2
+    end
+  ## elseif vargs_len == 4 then
+    if (#[t]# < (#[d]# / 2)) then
+      return easings.bounce.easeIn(#[t]# * 2, 0, #[c]#, #[d]#) * 0.5 + #[b]#
+    else
+      return easings.bounce.easeOut(#[t]# * 2 - #[d]#, 0, #[c]#, #[d]#) * 0.5 + #[c]# * 0.5 + #[b]#
+    end
+  ## end
+end
