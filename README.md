@@ -1,6 +1,6 @@
 # nelua-fun
 
-Collection of bindings and modules that done for Nelua on my own (WIP)
+Collection of bindings/modules/library that i made for Nelua on my own (WIP)
 
 ### Bindings
 
