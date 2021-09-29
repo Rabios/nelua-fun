@@ -1,0 +1,92 @@
+require "sigil"
+require "C.arg"
+
+-- shapes
+-- demonstrates how to draw outlined and filled geometric shapes
+
+local function main(argc: cint, argv: *[0]cstring): cint
+  -- the width and height of our desired window in pixels; rendered objects use the same coordinate space,
+  -- with the bottom left-hand corner having the world-space coordinate of (0, 0)
+  local WINDOW_WIDTH: cint = 500
+  local WINDOW_HEIGHT: cint = 500
+  
+  -- this initializes the sigil library and creates a window of the desired size
+  slWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "SIGIL Shapes Example", 0)
+
+  -- the colour of the background is specified using RGB values in the range [0.0, 1.0]
+  slSetBackColor(0, 0, 0) -- black
+  
+  -- the window will remain open (and the program will remain in this loop) until the user presses the 'X' to close
+  while slShouldClose() ~= 1 and slGetKey(SL_KEY_ESCAPE) ~= 1 do
+    -- draw the inner fill for a triangle
+    slSetForeColor(0.5, 0, 0, 0.5)
+    slTriangleFill(100, 450, 50, 50)
+    
+    -- draw the outline for a triangle
+    slSetForeColor(0.8, 0, 0, 0.8)
+    slTriangleOutline(100, 450, 50, 50)
+
+    -- draw the inner fill for a rectangle
+    slSetForeColor(0.5, 0.5, 0, 0.5)
+    slRectangleFill(175, 450, 50, 50)
+
+    -- draw the outline for a rectangle
+    slSetForeColor(0.8, 0.8, 0, 0.8)
+    slRectangleOutline(175, 450, 50, 50)
+
+    -- draw the inner fill for a hexagon
+    slSetForeColor(0, 0.5, 0, 0.5)
+    slCircleFill(250, 450, 25, 6)
+
+    -- draw the outline for a hexagon
+    slSetForeColor(0, 0.8, 0, 0.8)
+    slCircleOutline(250, 450, 25, 6)
+
+    -- draw the inner fill for a circle
+    slSetForeColor(0, 0, 0.5, 0.5)
+    slCircleFill(325, 450, 25, 16)
+
+    -- draw the outline for a circle
+    slSetForeColor(0, 0, 0.8, 0.8)
+    slCircleOutline(325, 450, 25, 16)
+
+    -- draw the inner fill for a semicircle
+    slSetForeColor(0.5, 0, 0.5, 0.5)
+    slSemiCircleFill(400, 450, 25, 16, 120)
+
+    -- draw the outline for a semicircle
+    slSetForeColor(0.8, 0, 0.8, 0.8)
+    slSemiCircleOutline(400, 450, 25, 16, 120)
+
+    -- draw some lines that move downwards and change colour
+    for i = 0, 19 do
+      slSetForeColor(i / 20, i / 40, 0, 0.9)
+      slLine(100, 400 - i * 10, 400, 400 - i * 10)
+	end
+
+    -- now draw some pretty points whose (x, y) position determines their colour
+    for x = 100, 400, 6 do
+      for y = 25, 200, 3 do
+        -- shifting colours as we move across the array of points
+        slSetForeColor((x - 100) / 300,     -- red contribution is determined by x position
+                       (y - 100) / 175,     -- green contribution is determined by y position
+                       0,                   -- blue contribution is always zero
+                       1)                   -- alpha is full
+
+        -- draw our point at the specified coordinate
+        slPoint(x, y)
+      end
+    end
+
+    -- display anything that SIGIL needs to as a result of drawing commands
+    slRender()
+  end
+
+  -- shut down our sigil window
+  slClose()
+
+  -- program ends
+  return 0
+end
+
+return main(C.argc, C.argv)

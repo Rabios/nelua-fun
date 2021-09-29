@@ -1,0 +1,164 @@
+##[[
+  cinclude '"sl.h"'
+  linklib "libsigil"
+]]
+
+-- text alignment symbolic constants
+global SL_ALIGN_CENTER: cint <cimport, nodecl, const>
+global SL_ALIGN_RIGHT: cint <cimport, nodecl, const>
+global SL_ALIGN_LEFT: cint <cimport, nodecl, const>
+
+-- input key symbolic constants
+global SL_KEY_ESCAPE: cint <cimport, nodecl, const>
+global SL_KEY_ENTER: cint <cimport, nodecl, const>
+global SL_KEY_TAB: cint <cimport, nodecl, const>
+global SL_KEY_BACKSPACE: cint <cimport, nodecl, const>
+global SL_KEY_INSERT: cint <cimport, nodecl, const>
+global SL_KEY_DELETE: cint <cimport, nodecl, const>
+global SL_KEY_RIGHT: cint <cimport, nodecl, const>
+global SL_KEY_LEFT: cint <cimport, nodecl, const>
+global SL_KEY_DOWN: cint <cimport, nodecl, const>
+global SL_KEY_UP: cint <cimport, nodecl, const>
+global SL_KEY_PAGE_UP: cint <cimport, nodecl, const>
+global SL_KEY_PAGE_DOWN: cint <cimport, nodecl, const>
+global SL_KEY_HOME: cint <cimport, nodecl, const>
+global SL_KEY_END: cint <cimport, nodecl, const>
+global SL_KEY_CAPS_LOCK: cint <cimport, nodecl, const>
+global SL_KEY_SCROLL_LOCK: cint <cimport, nodecl, const>
+global SL_KEY_NUM_LOCK: cint <cimport, nodecl, const>
+global SL_KEY_PRINT_SCREEN: cint <cimport, nodecl, const>
+global SL_KEY_PAUSE: cint <cimport, nodecl, const>
+global SL_KEY_F1: cint <cimport, nodecl, const>
+global SL_KEY_F2: cint <cimport, nodecl, const>
+global SL_KEY_F3: cint <cimport, nodecl, const>
+global SL_KEY_F4: cint <cimport, nodecl, const>
+global SL_KEY_F5: cint <cimport, nodecl, const>
+global SL_KEY_F6: cint <cimport, nodecl, const>
+global SL_KEY_F7: cint <cimport, nodecl, const>
+global SL_KEY_F8: cint <cimport, nodecl, const>
+global SL_KEY_F9: cint <cimport, nodecl, const>
+global SL_KEY_F10: cint <cimport, nodecl, const>
+global SL_KEY_F11: cint <cimport, nodecl, const>
+global SL_KEY_F12: cint <cimport, nodecl, const>
+global SL_KEY_F13: cint <cimport, nodecl, const>
+global SL_KEY_F14: cint <cimport, nodecl, const>
+global SL_KEY_F15: cint <cimport, nodecl, const>
+global SL_KEY_F16: cint <cimport, nodecl, const>
+global SL_KEY_F17: cint <cimport, nodecl, const>
+global SL_KEY_F18: cint <cimport, nodecl, const>
+global SL_KEY_F19: cint <cimport, nodecl, const>
+global SL_KEY_F20: cint <cimport, nodecl, const>
+global SL_KEY_F21: cint <cimport, nodecl, const>
+global SL_KEY_F22: cint <cimport, nodecl, const>
+global SL_KEY_F23: cint <cimport, nodecl, const>
+global SL_KEY_F24: cint <cimport, nodecl, const>
+global SL_KEY_F25: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_0: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_1: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_2: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_3: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_4: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_5: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_6: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_7: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_8: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_9: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_DECIMAL: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_DIVIDE: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_MULTIPLY: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_SUBTRACT: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_ADD: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_ENTER: cint <cimport, nodecl, const>
+global SL_KEY_KEYPAD_EQUAL: cint <cimport, nodecl, const>
+global SL_KEY_LEFT_SHIFT: cint <cimport, nodecl, const>
+global SL_KEY_LEFT_CONTROL: cint <cimport, nodecl, const>
+global SL_KEY_LEFT_ALT: cint <cimport, nodecl, const>
+global SL_KEY_LEFT_SUPER: cint <cimport, nodecl, const>
+global SL_KEY_RIGHT_SHIFT: cint <cimport, nodecl, const>
+global SL_KEY_RIGHT_CONTROL: cint <cimport, nodecl, const>
+global SL_KEY_RIGHT_ALT: cint <cimport, nodecl, const>
+global SL_KEY_RIGHT_SUPER: cint <cimport, nodecl, const>
+
+-- mouse input symbolic constants
+global SL_MOUSE_BUTTON_1: cint <cimport, nodecl, const>
+global SL_MOUSE_BUTTON_2: cint <cimport, nodecl, const>
+global SL_MOUSE_BUTTON_3: cint <cimport, nodecl, const>
+global SL_MOUSE_BUTTON_4: cint <cimport, nodecl, const>
+global SL_MOUSE_BUTTON_5: cint <cimport, nodecl, const>
+global SL_MOUSE_BUTTON_6: cint <cimport, nodecl, const>
+global SL_MOUSE_BUTTON_7: cint <cimport, nodecl, const>
+global SL_MOUSE_BUTTON_8: cint <cimport, nodecl, const>
+global SL_MOUSE_BUTTON_LEFT: cint <cimport, nodecl, const>
+global SL_MOUSE_BUTTON_RIGHT: cint <cimport, nodecl, const>
+global SL_MOUSE_BUTTON_MIDDLE: cint <cimport, nodecl, const>
+
+-- initialization commands
+global function slWindow(width: cint, height: cint, title: cstring <const>, fullScreen: cint) <cimport, nodecl> end
+global function slShowCursor(showCursor: cint) <cimport, nodecl> end
+global function slClose() <cimport, nodecl> end
+global function slShouldClose(): cint <cimport, nodecl> end
+
+-- simple input
+global function slGetKey(key: cint): cint <cimport, nodecl> end
+global function slGetMouseButton(button: cint): cint <cimport, nodecl> end
+global function slGetMouseX(): cint <cimport, nodecl> end
+global function slGetMouseY(): cint <cimport, nodecl> end
+
+-- simple frame timing
+global function slGetDeltaTime(): float64 <cimport, nodecl> end
+global function slGetTime(): float64 <cimport, nodecl> end
+
+-- rendering commands
+global function slRender() <cimport, nodecl> end
+
+-- color control
+global function slSetBackColor(red: float64, green: float64, blue: float64) <cimport, nodecl> end
+global function slSetForeColor(red: float64, green: float64, blue: float64, alpha: float64) <cimport, nodecl> end
+
+-- blending control
+global function slSetAdditiveBlend(additiveBlend: cint) <cimport, nodecl> end
+
+-- transformations
+global function slPush() <cimport, nodecl> end
+global function slPop() <cimport, nodecl> end
+global function slTranslate(x: float64, y: float64) <cimport, nodecl> end
+global function slRotate(degrees: float64) <cimport, nodecl> end
+global function slScale(x: float64, y: float64) <cimport, nodecl> end
+
+-- texture loading
+global function slLoadTexture(filename: cstring <const>): cint <cimport, nodecl> end
+
+-- sound loading and playing
+global function slLoadWAV(filename: cstring <const>): cint <cimport, nodecl> end
+global function slSoundPlay(sound: cint): cint <cimport, nodecl> end
+global function slSoundLoop(sound: cint): cint <cimport, nodecl> end
+global function slSoundPause(sound: cint) <cimport, nodecl> end
+global function slSoundStop(sound: cint) <cimport, nodecl> end
+global function slSoundPauseAll() <cimport, nodecl> end
+global function slSoundStopAll() <cimport, nodecl> end
+global function slSoundPlaying(sound: cint): cint <cimport, nodecl> end
+global function slSoundLooping(sound: cint): cint <cimport, nodecl> end
+
+-- simple shape commands
+global function slTriangleFill(x: float64, y: float64, width: float64, height: float64) <cimport, nodecl> end
+global function slTriangleOutline(x: float64, y: float64, width: float64, height: float64) <cimport, nodecl> end
+global function slRectangleFill(x: float64, y: float64, width: float64, height: float64) <cimport, nodecl> end
+global function slRectangleOutline(x: float64, y: float64, width: float64, height: float64) <cimport, nodecl> end
+global function slCircleFill(x: float64, y: float64, radius: float64, numVertices: cint) <cimport, nodecl> end
+global function slCircleOutline(x: float64, y: float64, radius: float64, numVertices: cint) <cimport, nodecl> end
+global function slSemiCircleFill(x: float64, y: float64, radius: float64, numVertices: cint, degrees: float64) <cimport, nodecl> end
+global function slSemiCircleOutline(x: float64, y: float64, radius: float64, numVertices: cint, degrees: float64) <cimport, nodecl> end
+global function slPoint(x: float64, y: float64) <cimport, nodecl> end
+global function slLine(x1: float64, y1: float64, x2: float64, y2: float64) <cimport, nodecl> end
+global function slSetSpriteTiling(x: float64, y: float64) <cimport, nodecl> end
+global function slSetSpriteScroll(x: float64, y: float64) <cimport, nodecl> end
+global function slSprite(texture: cint, x: float64, y: float64, width: float64, height: float64) <cimport, nodecl> end
+
+-- text commands
+global function slSetTextAlign(fontAlign: cint) <cimport, nodecl> end
+global function slGetTextWidth(text: cstring <const>): float64 <cimport, nodecl> end
+global function slGetTextHeight(text: cstring <const>): float64 <cimport, nodecl> end
+global function slLoadFont(fontFilename: cstring <const>): cint <cimport, nodecl> end
+global function slSetFont(font: cint, fontSize: cint) <cimport, nodecl> end
+global function slSetFontSize(fontSize: cint) <cimport, nodecl> end
+global function slText(x: float64, y: float64, text: cstring <const>) <cimport, nodecl> end

@@ -5,6 +5,12 @@
   linklib "XInput9_1_0"
 ]]
 
+## if ccinfo.is_64 then
+  local wchar_t: type = @cuint
+## else
+  local wchar_t: type = @culong
+## end
+
 ## else
   error("XInput is not supported on your platform!", 2)
 ## end
@@ -196,11 +202,7 @@ global XINPUT_CAPABILITIES: type <cimport, nodecl> = @record {
 
 global XINPUT_KEYSTROKE: type <cimport, nodecl> = @record {
   VirtualKey: cushort,
-## if ccinfo.is_64 then
-  Unicode: cint,
-## else
-  Unicode: culong,
-## end
+  Unicode: wchar_t,
   Flags: cushort,
   UserIndex: cuchar,
   HidCode: cuchar
@@ -225,9 +227,4 @@ global function XInputGetKeystroke(dwUserIndex: culong, dwReserved: culong, pKey
 global function XInputGetCapabilities(dwUserIndex: culong, dwFlags: culong, pCapabilities: *XINPUT_CAPABILITIES): culong <cimport, nodecl> end
 global function XInputGetDSoundAudioDeviceGuids(dwUserIndex: culong, pDSoundRenderGuid: *GUID, pDSoundCaptureGuid: *GUID): culong <cimport, nodecl> end
 global function XInputGetBatteryInformation(dwUserIndex: culong, devType: cuchar, pBatteryInformation: *XINPUT_BATTERY_INFORMATION): culong <cimport, nodecl> end
-
-## if ccinfo.is_64 then
-global function XInputGetAudioDeviceIds(dwUserIndex: culong, pRenderDeviceId: **cint <const>, pRenderCount: *cuint, pCaptureDeviceId: **cint <const>, pCaptureCount: *cuint): culong <cimport, nodecl> end
-## else
-global function XInputGetAudioDeviceIds(dwUserIndex: culong, pRenderDeviceId: **culong <const>, pRenderCount: *cuint, pCaptureDeviceId: **culong <const>, pCaptureCount: *cuint): culong <cimport, nodecl> end  
-## end
+global function XInputGetAudioDeviceIds(dwUserIndex: culong, pRenderDeviceId: **wchar_t <const>, pRenderCount: *cuint, pCaptureDeviceId: **wchar_t <const>, pCaptureCount: *cuint): culong <cimport, nodecl> end
