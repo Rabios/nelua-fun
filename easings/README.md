@@ -1,5 +1,11 @@
 # API
 
+## easings
+
+Resources:
+1. https://easings.net
+2. http://robertpenner.com/easing
+
 ### easings
 
 ```nelua
