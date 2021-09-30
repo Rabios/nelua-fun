@@ -1,0 +1,17 @@
+require "C.arg"
+require "tigr"
+
+local function main(argc: cint, argv: *[0]cstring): cint
+  local screen: *Tigr = tigrWindow(320, 240, "Tigr Nelua", 0)
+  
+  while tigrClosed(screen) == 0 do
+    tigrClear(screen, tigrRGB(0, 0, 0))
+    tigrPrint(screen, tfont, 120, 110, tigrRGB(255, 255, 255), "Hello, World!")
+    tigrUpdate(screen)
+  end
+  
+  tigrFree(screen)
+  return 0
+end
+
+return main(C.argc, C.argv)

@@ -9,6 +9,7 @@ Collection of stuff that i made for [Nelua](https://nelua.io) on my own (WIP)
 | [xinput][3]   | [XInput][4] bindings (Only runs on Windows)       |
 | [ffi][5]      | FFI (Foreign Function Interface) module           |
 | [sigil][6]    | [SIGIL][7] bindings                               |
+| [tigr][8]     | [TIGR][9] bindings                                |
 
 ### Building Tests
 
@@ -28,6 +29,8 @@ To build test simply `cd` into library's directory and `make test`
 [5]: https://github.com/Rabios/nelua-fun/tree/main/ffi
 [6]: https://github.com/Rabios/nelua-fun/tree/main/sigil
 [7]: http://libsigil.com
+[8]: https://github.com/Rabios/nelua-fun/tree/main/tigr
+[9]: https://github.com/erkkah/tigr
 
 ### License
 

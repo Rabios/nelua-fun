@@ -1,6 +1,6 @@
 # Building
 
-The test requires binary distribution of [SIGIL](http://libsigil.com) so:
+The bindings requires binary distribution of [SIGIL](http://libsigil.com) so:
 
 1. Download the build depending on your platfornm from downloads there...
 2. Create folder named `lib` in this directory.
