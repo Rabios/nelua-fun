@@ -2536,7 +2536,7 @@ function mathkit.quat.transform(q: quat, m: mat4): quat
 ### mathkit.quat.equ
 
 ```nelua
-function mathkit.quat.equ(q1: [4]number, q2: [4]number): boolean
+function mathkit.quat.equ(q1: quat, q2: quat): boolean
 ```
 
 
@@ -2873,7 +2873,7 @@ function mathkit.quat2.translate(q: quat2, v: vec3): quat2
 ### mathkit.quat2.rot_by_quat_append
 
 ```nelua
-function mathkit.quat2.rot_by_quat_append(q1: quat2, q2: [4]number): quat2
+function mathkit.quat2.rot_by_quat_append(q1: quat2, q2: quat): quat2
 ```
 
 
@@ -2881,7 +2881,7 @@ function mathkit.quat2.rot_by_quat_append(q1: quat2, q2: [4]number): quat2
 ### mathkit.quat2.rot_by_quat_prepend
 
 ```nelua
-function mathkit.quat2.rot_by_quat_prepend(q1: [4]number, q2: quat2): quat2
+function mathkit.quat2.rot_by_quat_prepend(q1: quat, q2: quat2): quat2
 ```
 
 
