@@ -10,6 +10,7 @@ Collection of stuff that i made for [Nelua](https://nelua.io) on my own (WIP)
 | [ffi][5]      | FFI (Foreign Function Interface) module           |
 | [sigil][6]    | [SIGIL][7] bindings                               |
 | [tigr][8]     | [TIGR][9] bindings                                |
+| [http][10]     | [http.h][11] bindings                             |
 
 ### Building Tests
 
@@ -31,6 +32,8 @@ To build test simply `cd` into library's directory and `make test`
 [7]: http://libsigil.com
 [8]: https://github.com/Rabios/nelua-fun/tree/main/tigr
 [9]: https://github.com/erkkah/tigr
+[10]: https://github.com/Rabios/nelua-fun/tree/main/http
+[11]: https://github.com/mattiasgustavsson/libs/blob/main/http.h
 
 ### License
 

@@ -1,0 +1,37 @@
+require "C.arg"
+require "string"
+require "http"
+
+local function main(argc: cint, argv: *[0]cstring): cint
+  local request: *http_t = http_get("http://example.com/index.html?count=10", nilptr)
+  
+  if request == nil then
+    print("ERROR: Invalid request.")
+    return 1
+  end
+  
+  local status: cint = HTTP_STATUS_PENDING
+  local prev_size: cint = -1
+  
+  while status == HTTP_STATUS_PENDING do
+    status = http_process(request)
+    
+    if prev_size ~= (@cint)(request.response_size) then
+      print(tostring((@cint)(request.response_size)) .. " byte(s) received.")
+      prev_size = (@cint)(request.response_size)
+    end
+  end
+  
+  if status == HTTP_STATUS_FAILED then
+    print("ERROR: HTTP request failed (" .. request.status_code .. "): " .. request.reason_phrase)
+    http_release(request)
+    return 1
+  end
+  
+  print("\nContent type: " .. request.content_type .. "\n\n" .. (@cstring)(request.response_data))
+  http_release(request)
+  
+  return 0
+end
+
+return main(C.argc, C.argv)
