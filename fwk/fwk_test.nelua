@@ -1,0 +1,20 @@
+require "C.arg"
+require "fwk"
+
+local function main(argc: cint, argv: *[0]cstring): cint
+  window_create(75, 0)
+  window_title("FWK + Nelua")
+  
+  while window_swap() == 1 and input(KEY_ESC) == 0 do
+    ddraw_grid(10)
+    ddraw_flush()
+    
+    if ui_begin("Nelua!", 0) == 1then
+      ui_end()
+    end
+  end
+  
+  return 0
+end
+
+return main(C.argc, C.argv)
