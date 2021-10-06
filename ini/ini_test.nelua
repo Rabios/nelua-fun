@@ -1,0 +1,27 @@
+require "C.arg"
+require "allocators.general"
+require "io"
+require "ini"
+
+local function main(argc: cint, argv: *[0]cstring): cint
+  local ini: *ini_t = ini_create(nilptr)
+  ini_property_add(ini, INI_GLOBAL_SECTION, "FirstSetting", 0, "Test", 0)
+  ini_property_add(ini, INI_GLOBAL_SECTION, "SecondSetting", 0, "2", 0)
+  
+  local section: cint = ini_section_add(ini, "MySection", 0)
+  ini_property_add(ini, section, "ThirdSetting", 0, "Three", 0)
+  
+  local size: cint = ini_save(ini, nilptr, 0)
+  local data: cstring = (@cstring)(general_allocator:alloc(size + 1))
+  size = ini_save(ini, data, size)
+  ini_destroy(ini)
+  
+  local fp = io.open("test.ini", "w")
+  fp:write(data)
+  fp:close()
+  general_allocator:delete(data)
+  
+  return 0
+end
+
+return main(C.argc, C.argv)

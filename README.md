@@ -12,6 +12,7 @@ Collection of stuff that i made for [Nelua](https://nelua.io) on my own (WIP)
 | [tigr][8]     | [TIGR][9] bindings                                |
 | [http][10]    | [http.h][11] bindings                             |
 | [fwk][12]     | [FWK][13] bindings                                |
+| [ini][14]     | [ini.h][15] bindings                              |
 
 ### Building Tests
 
@@ -37,6 +38,8 @@ To build test simply `cd` into library's directory and `make test`
 [11]: https://github.com/mattiasgustavsson/libs/blob/main/http.h
 [12]: https://github.com/Rabios/nelua-fun/tree/main/fwk
 [13]: https://github.com/r-lyeh/FWK
+[14]: https://github.com/Rabios/nelua-fun/tree/main/ini
+[15]: https://github.com/mattiasgustavsson/libs/blob/main/ini.h
 
 ### License
 

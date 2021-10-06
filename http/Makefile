@@ -4,4 +4,4 @@ NFLAGS=--cc=$(CC) -L..
 NELUARUN=$(NELUA) $(NFLAGS)
 
 test:
-	$(NELUARUN) http_test.nelua -o http_test
+	$(NELUARUN) http_test.nelua
