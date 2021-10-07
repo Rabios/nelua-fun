@@ -29,7 +29,7 @@ To build test simply `cd` into library's directory and `make test`
 [2]: https://github.com/Rabios/nelua-fun/tree/main/mathkit
 [3]: https://github.com/Rabios/nelua-fun/tree/main/xinput
 [4]: https://docs.microsoft.com/en-us/windows/win32/xinput/xinput-game-controller-apis-portal
-[5]: https://github.com/Rabios/nelua-fun/tree/main/ffi
+[5]: https://github.com/edubart/nelua-batteries/blob/main/ffi.nelua
 [6]: https://github.com/Rabios/nelua-fun/tree/main/sigil
 [7]: http://libsigil.com
 [8]: https://github.com/Rabios/nelua-fun/tree/main/tigr
