@@ -13,7 +13,7 @@ Collection of stuff that i made for [Nelua](https://nelua.io) on my own (WIP)
 | [http][10]    | Bindings for [http.h][11], Basic HTTP protocol implementation over sockets (no https) |
 | [fwk][12]     | Bindings for [FWK][13], 3D game framework |
 | [ini][14]     | Bindings for [ini.h][15], Simple ini-file reader for C/C++ |
-| [csfml][16]   | Bindings for [CSFML][17], official binding of SFML for the C language |
+| [csfml][16]   | Bindings for [CSFML][17], official binding of [SFML][18] for the C language |
 
 ### Building Tests
 
@@ -24,7 +24,7 @@ Each library has a folder which contains following:
 3. API documentation
 4. Makefile
 
-To build test simply `cd` into library's directory and `make test`
+Read `BUILDING.md` file if exists in the library bindings folder, Else do `make test` and run!
 
 [1]: https://github.com/Rabios/nelua-fun/tree/main/easings
 [2]: https://github.com/Rabios/nelua-fun/tree/main/mathkit
@@ -43,6 +43,7 @@ To build test simply `cd` into library's directory and `make test`
 [15]: https://github.com/mattiasgustavsson/libs/blob/main/ini.h
 [16]: https://github.com/Rabios/nelua-fun/tree/main/csfml
 [17]: https://www.sfml-dev.org/download/csfml
+[18]: https://www.sfml-dev.org
 
 ### License
 
