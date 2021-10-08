@@ -6,13 +6,14 @@ Collection of stuff that i made for [Nelua](https://nelua.io) on my own (WIP)
 |---------------|---------------------------------------------------|
 | [easings][1]  | Easings library                                   |
 | [mathkit][2]  | Vector/Quaternion/Matrices Math library           |
-| [xinput][3]   | [XInput][4] bindings (Only runs on Windows)       |
-| [ffi][5]      | FFI (Foreign Function Interface) module           |
-| [sigil][6]    | [SIGIL][7] bindings                               |
-| [tigr][8]     | [TIGR][9] bindings                                |
-| [http][10]    | [http.h][11] bindings                             |
-| [fwk][12]     | [FWK][13] bindings                                |
-| [ini][14]     | [ini.h][15] bindings                              |
+| [xinput][3]   | Bindings for [XInput][4], API that enables applications to receive input from the Xbox Controller for Windows. (Only runs on Windows) |
+| [ffi][5]      | FFI (Foreign Function Interface) module |
+| [sigil][6]    | Bindings for [SIGIL][7], Multimedia Library |
+| [tigr][8]     | Bindings for [TIGR][9], Tiny cross-platform graphics library, providing a unified API for Windows, macOS, Linux, iOS and Android. |
+| [http][10]    | Bindings for [http.h][11], Basic HTTP protocol implementation over sockets (no https) |
+| [fwk][12]     | Bindings for [FWK][13], 3D game framework |
+| [ini][14]     | Bindings for [ini.h][15], Simple ini-file reader for C/C++ |
+| [csfml][16]   | Bindings for [CSFML][17], official binding of SFML for the C language |
 
 ### Building Tests
 
@@ -40,6 +41,8 @@ To build test simply `cd` into library's directory and `make test`
 [13]: https://github.com/r-lyeh/FWK
 [14]: https://github.com/Rabios/nelua-fun/tree/main/ini
 [15]: https://github.com/mattiasgustavsson/libs/blob/main/ini.h
+[16]: https://github.com/Rabios/nelua-fun/tree/main/csfml
+[17]: https://www.sfml-dev.org/download/csfml
 
 ### License
 

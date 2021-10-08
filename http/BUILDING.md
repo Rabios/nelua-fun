@@ -2,5 +2,5 @@
 
 The bindings requires [`http.h`](https://github.com/mattiasgustavsson/libs/raw/main/http.h) so:
 
-1. Download `http.h` by saving file from the link, Then place `http.h` beside bindings code.
+1. `make download` to download required files.
 2. `make test` to run!

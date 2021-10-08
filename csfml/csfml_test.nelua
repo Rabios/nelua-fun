@@ -1,0 +1,50 @@
+require "C.arg"
+require "csfml"
+
+local function main(argc: cint, argv: *[0]cstring): cint
+  local mode: sfVideoMode = (@sfVideoMode) {
+    width = 800,
+    height = 600,
+    bitsPerPixel = 32
+  }
+  
+  local event: sfEvent
+  local window: *sfRenderWindow = sfRenderWindow_create(mode, "SFML Window", sfResize | sfClose, nilptr)
+  
+  if not window then
+    print("ERROR: failed to create window!")
+    return 1
+  end
+  
+  local font: *sfFont = sfFont_createFromFile("acme7wide.ttf")
+  
+  if not font then
+    print("ERROR: failed to load font!")
+    return 1
+  end
+  
+  local text: *sfText = sfText_create()
+  sfText_setString(text, "Hello SFML")
+  sfText_setFont(text, font)
+  sfText_setCharacterSize(text, 50)
+  
+  while sfRenderWindow_isOpen(window) == 1 do
+    while sfRenderWindow_pollEvent(window, &event) == 1 do
+      if event.type == sfEvtClosed then
+        sfRenderWindow_close(window)
+      end
+    end
+
+    sfRenderWindow_clear(window, sfBlack)
+    sfRenderWindow_drawText(window, text, nilptr)
+    sfRenderWindow_display(window)
+  end
+  
+  sfText_destroy(text)
+  sfFont_destroy(font)
+  sfRenderWindow_destroy(window)
+  
+  return 0
+end
+
+return main(C.argc, C.argv)

@@ -1,8 +1,5 @@
 # API
 
-## xinput
-
-
 ### XINPUT_GAMEPAD_DPAD_UP
 
 ```nelua
@@ -660,7 +657,7 @@ global XINPUT_CAPABILITIES: type = @record {
 ```nelua
 global XINPUT_KEYSTROKE: type = @record {
   VirtualKey: cushort,
-  Unicode: cint, -- On 32-bit platforms culong is used instead of cuint
+  Unicode: wchar_t,
   Flags: cushort,
   UserIndex: cuchar,
   HidCode: cuchar
@@ -678,7 +675,7 @@ global XINPUT_BATTERY_INFORMATION: type = @record {
 }
 ```
 
-
+Contains information on battery type and charge state.
 
 ### GUID
 
@@ -699,7 +696,7 @@ global GUID: type = @record {
 global function XInputEnable(enable: cint)
 ```
 
-
+Sets the reporting state of XInput.
 
 ### XInputSetState
 
@@ -707,7 +704,7 @@ global function XInputEnable(enable: cint)
 global function XInputSetState(dwUserIndex: culong, pVibration: *XINPUT_VIBRATION): culong
 ```
 
-
+Sends data to a connected controller. This function is used to activate the vibration function of a controller.
 
 ### XInputGetState
 
@@ -715,7 +712,7 @@ global function XInputSetState(dwUserIndex: culong, pVibration: *XINPUT_VIBRATIO
 global function XInputGetState(dwUserIndex: culong, pState: *XINPUT_STATE): culong
 ```
 
-
+Retrieves the current state of the specified controller.
 
 ### XInputGetKeystroke
 
@@ -723,7 +720,7 @@ global function XInputGetState(dwUserIndex: culong, pState: *XINPUT_STATE): culo
 global function XInputGetKeystroke(dwUserIndex: culong, dwReserved: culong, pKeystroke: *XINPUT_KEYSTROKE): culong
 ```
 
-
+Retrieves a gamepad input event.
 
 ### XInputGetCapabilities
 
@@ -731,7 +728,7 @@ global function XInputGetKeystroke(dwUserIndex: culong, dwReserved: culong, pKey
 global function XInputGetCapabilities(dwUserIndex: culong, dwFlags: culong, pCapabilities: *XINPUT_CAPABILITIES): culong
 ```
 
-
+Retrieves the capabilities and features of a connected controller.
 
 ### XInputGetDSoundAudioDeviceGuids
 
@@ -739,7 +736,7 @@ global function XInputGetCapabilities(dwUserIndex: culong, dwFlags: culong, pCap
 global function XInputGetDSoundAudioDeviceGuids(dwUserIndex: culong, pDSoundRenderGuid: *GUID, pDSoundCaptureGuid: *GUID): culong
 ```
 
-
+Gets the sound rendering and sound capture device GUIDs that are associated with the headset connected to the specified controller.
 
 ### XInputGetBatteryInformation
 
@@ -747,15 +744,14 @@ global function XInputGetDSoundAudioDeviceGuids(dwUserIndex: culong, pDSoundRend
 global function XInputGetBatteryInformation(dwUserIndex: culong, devType: cuchar, pBatteryInformation: *XINPUT_BATTERY_INFORMATION): culong
 ```
 
-
+Retrieves the battery type and charge status of a wireless controller.
 
 ### XInputGetAudioDeviceIds
 
 ```nelua
--- On 32-bit platforms culong is used instead of cuint for pRenderDeviceId and pCaptureDeviceId
-global function XInputGetAudioDeviceIds(dwUserIndex: culong, pRenderDeviceId: **cint <const>, pRenderCount: *cuint, pCaptureDeviceId: **cint <const>, pCaptureCount: *cuint): culong
+global function XInputGetAudioDeviceIds(dwUserIndex: culong, pRenderDeviceId: **wchar_t <const>, pRenderCount: *cuint, pCaptureDeviceId: **wchar_t <const>, pCaptureCount: *cuint): culong
 ```
 
-
+Retrieves the sound rendering and sound capture audio device IDs that are associated with the headset connected to the specified controller.
 
 ---

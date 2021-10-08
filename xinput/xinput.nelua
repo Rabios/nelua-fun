@@ -208,6 +208,7 @@ global XINPUT_KEYSTROKE: type <cimport, nodecl> = @record {
   HidCode: cuchar
 }
 
+-- Contains information on battery type and charge state.
 global XINPUT_BATTERY_INFORMATION: type <cimport, nodecl> = @record {
   BatteryType: cuchar,
   BatteryLevel: cuchar
@@ -220,11 +221,26 @@ global GUID: type <cimport, nodecl> = @record {
   Data4: [8]cuchar
 }
 
+-- Sets the reporting state of XInput.
 global function XInputEnable(enable: cint) <cimport, nodecl> end
+
+-- Sends data to a connected controller. This function is used to activate the vibration function of a controller.
 global function XInputSetState(dwUserIndex: culong, pVibration: *XINPUT_VIBRATION): culong <cimport, nodecl> end
+
+-- Retrieves the current state of the specified controller.
 global function XInputGetState(dwUserIndex: culong, pState: *XINPUT_STATE): culong <cimport, nodecl> end
+
+-- Retrieves a gamepad input event.
 global function XInputGetKeystroke(dwUserIndex: culong, dwReserved: culong, pKeystroke: *XINPUT_KEYSTROKE): culong <cimport, nodecl> end
+
+-- Retrieves the capabilities and features of a connected controller.
 global function XInputGetCapabilities(dwUserIndex: culong, dwFlags: culong, pCapabilities: *XINPUT_CAPABILITIES): culong <cimport, nodecl> end
+
+-- Gets the sound rendering and sound capture device GUIDs that are associated with the headset connected to the specified controller.
 global function XInputGetDSoundAudioDeviceGuids(dwUserIndex: culong, pDSoundRenderGuid: *GUID, pDSoundCaptureGuid: *GUID): culong <cimport, nodecl> end
+
+-- Retrieves the battery type and charge status of a wireless controller.
 global function XInputGetBatteryInformation(dwUserIndex: culong, devType: cuchar, pBatteryInformation: *XINPUT_BATTERY_INFORMATION): culong <cimport, nodecl> end
+
+-- Retrieves the sound rendering and sound capture audio device IDs that are associated with the headset connected to the specified controller.
 global function XInputGetAudioDeviceIds(dwUserIndex: culong, pRenderDeviceId: **wchar_t <const>, pRenderCount: *cuint, pCaptureDeviceId: **wchar_t <const>, pCaptureCount: *cuint): culong <cimport, nodecl> end
