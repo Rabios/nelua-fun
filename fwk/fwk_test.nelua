@@ -9,7 +9,7 @@ local function main(argc: cint, argv: *[0]cstring): cint
     ddraw_grid(10)
     ddraw_flush()
     
-    if ui_begin("Nelua!", 0) == 1then
+    if ui_begin("Nelua!", 0) == 1 then
       ui_end()
     end
   end
