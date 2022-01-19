@@ -213,6 +213,14 @@ global function tigrKeyHeld(bmp: *Tigr, key: cint): cint <cimport, nodecl> end
 ]]
 global function tigrReadChar(bmp: *Tigr): cint <cimport, nodecl> end
 
+## if ccinfo.is_android or ccinfo.is_ios then
+--[[
+  Show / hide virtual keyboard.
+  (Only available on iOS / Android)
+]]
+global function tigrShowKeyboard(show: cint): void <cimport, nodecl> end
+## end
+
 --[[
   Loads a PNG from a file. (`fileName` is UTF-8)
   On error, returns `nilptr` and sets `errno`.

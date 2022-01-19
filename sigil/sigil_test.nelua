@@ -5,8 +5,9 @@ require "C.arg"
 -- demonstrates how to draw outlined and filled geometric shapes
 
 local function main(argc: cint, argv: *[0]cstring): cint
-  -- the width and height of our desired window in pixels; rendered objects use the same coordinate space,
-  -- with the bottom left-hand corner having the world-space coordinate of (0, 0)
+  --[[
+  the width and height of our desired window in pixels; rendered objects use the same coordinate space, with the bottom left-hand corner having the world-space coordinate of (0, 0)
+  ]]
   local WINDOW_WIDTH: cint = 500
   local WINDOW_HEIGHT: cint = 500
   
