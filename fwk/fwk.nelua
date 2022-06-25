@@ -1,143 +1,191 @@
--- commit: 14cf52246fc51d9f20c0df69c74efa670de6f4bd
-## cfile "fwk.c"
-## cinclude "fwk.h"
+##[[
+--[=[
+cemit [==[
+  #define WITH_DLL 1
+  #define WITH_FASTCALL_LUA 1
+  #define WITH_LEAK_DETECTOR 1
+  #define WITH_PROFILE 1
+  #define WITH_SELFIES 1
+  #define WITH_XREALLOC_POISON 1
+  #define WITH_LINUX_CALLSTACKS 1
+  ]==]
+]=]
+
+cfile "fwk.c"
+cinclude "fwk.h"
+  
+if ccinfo.is_windows then
+  linklib "advapi32"
+  linklib "comdlg32"
+  linklib "dbghelp"
+  linklib "gdi32"
+  linklib "ole32"
+  linklib "shell32"
+  linklib "user32"
+  linklib "winmm"
+  linklib "ws2_32"
+elseif ccinfo.is_linux then
+  linklib "dl"
+  linklib "m"
+  linklib "pthread"
+elseif ccinfo.is_apple then
+  cflags "-framework IOKit -framework Cocoa"
+end
+]]
 
 global FILE: type <cimport, nodecl, forwarddecl> = @record {}
 
-## if ccinfo.is_windows then
-##[[
-  linklib "ws2_32"
-  linklib "gdi32"
-  linklib "winmm"
-  linklib "dbghelp"
-]]
-## elseif ccinfo.is_linux then
-##[[
-  linklib "m"
-  linklib "pthread"
-  linklib "dl"
-]]
-## elseif ccinfo.is_apple then
-## cflags "-framework IOKit -framework Cocoa"
+## if ccinfo.is_64 then
+  global wchar_t: type <cimport, nodecl> = @cint 
+## else
+  global wchar_t: type <cimport, nodecl> = @culong
 ## end
 
--- config
---[=[
+-- config (fwk_config.h)
+##[[
 
-## cemit [[
-  #define WITH_COOKER 0
-  #define WITH_FASTCALL_LUA 1
-  #define WITH_LEAK_DETECTOR 0
-  #define WITH_PROFILE 0
-  #define WITH_XREALLOC_POISON 0
-  #define WITH_VIDEO_YCBCR 1
 ]]
 
-]=]
+-- sort
+global function sort_64(a: pointer <const>, b: pointer <const>): cint <cimport, nodecl> end
 
--- math
-global C_EPSILON: clonglong <cimport, nodecl, const>
+-- less
+global function less_64(a: uint64, b: uint64): cint <cimport, nodecl> end
+global function less_int(a: cint, b: cint): cint <cimport, nodecl> end
+global function less_ptr(a: pointer, b: pointer): cint <cimport, nodecl> end
+global function less_str(a: cstring, b: cstring): cint <cimport, nodecl> end
+
+-- un/hash
+global function unhash_32(x: uint32): uint32 <cimport, nodecl> end
+global function hash_32(x: uint32): uint32 <cimport, nodecl> end
+global function hash_64(x: uint64): uint64 <cimport, nodecl> end
+global function hash_flt(x: float64): uint64 <cimport, nodecl> end
+global function hash_str(str: cstring <const>): uint64 <cimport, nodecl> end
+global function hash_int(key: cint): uint64 <cimport, nodecl> end
+global function hash_ptr(key: pointer <const>): uint64 <cimport, nodecl> end
+
+-- bits
+global function popcnt64(x: uint64): uint64 <cimport, nodecl> end
+
+-- vector based allocator (x1.75 enlarge factor)
+global function vrealloc(p: pointer, sz: csize): pointer <cimport, nodecl> end
+global function vlen(p: pointer): csize <cimport, nodecl> end
+
+-- ds
+global set_item: type <cimport, nodecl> = @record {
+  next: *set_item,
+  keyhash: uint64,
+  key: pointer,
+  super: pointer
+}
+
+global set: type <cimport, nodecl> = @record {
+  array: **[0]set_item,
+  cmp: function(pointer, pointer): cint,
+  hash: function(pointer): uint64,
+  count: cint
+}
+
+global function set_init(m: *set): void <cimport, nodecl> end
+global function set_free(m: *set): void <cimport, nodecl> end
+global function set_insert(m: *set, p: *set_item, key: pointer, keyhash: uint64, super: pointer): void <cimport, nodecl> end
+global function set_erase(m: *set, key: pointer, keyhash: uint64): void <cimport, nodecl> end
+global function set_find(m: *set <const>, key: pointer, keyhash: uint64): pointer <cimport, nodecl> end
+global function set_count(m: *set <const>): cint <cimport, nodecl> end
+global function set_gc(m: *set): void <cimport, nodecl> end
+
+global pair: type <cimport, nodecl> = @record {
+  next: *pair,
+  keyhash: uint64,
+  key: pointer,
+  value: pointer,
+  super: pointer
+}
+
+global map: type <cimport, nodecl> = @record {
+  array: **[0]pair,
+  cmp: function(pointer, pointer): cint,
+  hash: function(pointer): uint64,
+  count: cint
+}
+
+global function map_init(m: *map): void <cimport, nodecl> end
+global function map_free(m: *map): void <cimport, nodecl> end
+global function map_insert(m: *map, p: *pair, key: pointer, value: pointer, keyhash: uint64, super: pointer): void <cimport, nodecl> end
+global function map_erase(m: *map, key: pointer, keyhash: uint64): void <cimport, nodecl> end
+global function map_find(m: *map, key: pointer, keyhash: uint64): pointer <cimport, nodecl> end
+global function map_count(m: *map): cint <cimport, nodecl> end
+global function map_gc(m: *map): void <cimport, nodecl> end
+
+global C_EPSILON: float64 <cimport, nodecl, const>
 global C_PI: float32 <cimport, nodecl, const>
 global TO_RAD: float32 <cimport, nodecl, const>
 global TO_DEG: float32 <cimport, nodecl, const>
 
+global vec2i: type <cimport, nodecl> = @union {
+  s1: record { X: cint, Y: cint },
+  s2: record { x: cint, y: cint },
+  s3: record { r: cint, g: cint },
+  s4: record { w: cint, h: cint },
+  s5: record { min: cint, max: cint },
+  s6: record { from: cint, to: cint },
+  s7: record { src: cint, dst: cint },
+  v2: [2]cint,
+  array: [1]cint
+}
+
 global vec2: type <cimport, nodecl> = @union {
-  s1: record {
-    x: float32,
-    y: float32
-  },
-  s2: record {
-    r: float32,
-    g: float32
-  },
-  s3: record {
-    w: float32,
-    h: float32
-  },
-  s4: record {
-    min: float32,
-    max: float32
-  },
-  v: [1]float32
+  s1: record { X: float32, Y: float32 },
+  s2: record { x: float32, y: float32 },
+  s3: record { r: float32, g: float32 },
+  s4: record { w: float32, h: float32 },
+  s5: record { min: float32, max: float32 },
+  s6: record { from: float32, to: float32 },
+  s7: record { src: float32, dst: float32 },
+  v2: [2]float32,
+  array: [1]float32
 }
 
 global vec3: type <cimport, nodecl> = @union {
-  s1: record {
-    x: float32,
-    y: float32,
-    z: float32
-  },
-  s2: record {
-    r: float32,
-    g: float32,
-    b: float32
-  },
-  s3: record {
-    w: float32,
-    h: float32,
-    d: float32
-  },
+  s1: record { X: float32, Y: float32, Z: float32 },
+  s2: record { x: float32, y: float32, z: float32 },
+  s3: record { r: float32, g: float32, b: float32 },
+  s4: record { w: float32, h: float32, d: float32 },
   xy: vec2,
   rg: vec2,
   wh: vec2,
-  v: [1]float32
+  v3: [3]float32,
+  array: [1]float32
 }
 
 global vec4: type <cimport, nodecl> = @union {
-  s1: record {
-    x: float32,
-    y: float32,
-    z: float32,
-    w: float32
-  },
-  s2: record {
-    r: float32,
-    g: float32,
-    b: float32,
-    a: float32
-  },
+  s1: record { X: float32, Y: float32, Z: float32, W: float32 },
+  s2: record { x: float32, y: float32, z: float32, w: float32 },
+  s3: record { r: float32, g: float32, b: float32, a: float32 },
   xy: vec2,
   xyz: vec3,
   rg: vec2,
   rgb: vec3,
   wh: vec2,
   whd: vec3,
-  v: [1]float32
+  v4: [4]float32,
+  array: [1]float32
 }
 
 global quat: type <cimport, nodecl> = @union {
-  s: record {
-    x: float32,
-    y: float32,
-    z: float32,
-    w: float32
-  },
+  s1: record { X: float32, Y: float32, Z: float32, W: float32 },
+  s2: record { x: float32, y: float32, z: float32, w: float32 },
   xyz: vec3,
   xyzw: vec4,
-  v: [1]float32
-}
-
-global AXIS_ENUMS: type <cimport, nodecl, using> = @enum(cint) {
-  axis_front = 0,
-  axis_back,
-  axis_left,
-  axis_right,
-  axis_up,
-  axis_down
-}
-
-global coord_system: type <cimport, nodecl> = @union {
-  s: record {
-    x: AXIS_ENUMS,
-    y: AXIS_ENUMS,
-    z: AXIS_ENUMS
-  }
+  v4: [4]float32,
+  array: [1]float32
 }
 
 global mat33: type <cimport, nodecl> = @array(float32, 9)
 global mat34: type <cimport, nodecl> = @array(float32, 12)
 global mat44: type <cimport, nodecl> = @array(float32, 16)
 
+global function new_vec2i(x: cint, y: cint): vec2 <cimport "vec2i", nodecl> end
 global function new_vec2(x: float32, y: float32): vec2 <cimport "vec2", nodecl> end
 global function new_vec3(x: float32, y: float32, z: float32): vec3 <cimport "vec3", nodecl> end
 global function new_vec4(x: float32, y: float32, z: float32, w: float32): vec4 <cimport "vec4", nodecl> end
@@ -146,17 +194,21 @@ global function new_quat(x: float32, y: float32, z: float32, w: float32): quat <
 global function new_mat33(...: cvarargs): mat33 <cimport "mat33", nodecl> end
 global function new_mat34(...: cvarargs): mat34 <cimport "mat34", nodecl> end
 global function new_mat44(...: cvarargs): mat44 <cimport "mat44", nodecl> end
-global function new_coord_system(...: cvarargs): coord_system <cimport "coord_system", nodecl> end
+--global function new_coord_system(...: cvarargs): coord_system <cimport "coord_system", nodecl> end
+
 global function randset(state: uint64): void <cimport, nodecl> end
 global function rand64(): uint64 <cimport, nodecl> end
-global function randf(): float64 <cimport, nodecl> end
-global function randi(mini: cint, maxi: cint): cint <cimport, nodecl> end
+global function randf(): float64 <cimport, nodecl> end                    -- [0, 1) interval
+global function randi(mini: cint, maxi: cint): cint <cimport, nodecl> end -- [mini, maxi) interval
+global function rng(): float64 <cimport, nodecl> end                      -- [0..1) Lehmer RNG "minimal standard"
+
 global function simplex1(x: float32): float32 <cimport, nodecl> end
 global function simplex2(xy: vec2): float32 <cimport, nodecl> end
 global function simplex3(xyz: vec3): float32 <cimport, nodecl> end
 global function simplex4(xyzw: vec4): float32 <cimport, nodecl> end
 
 global function ease_linear(t: float32): float32 <cimport, nodecl> end
+
 global function ease_out_sine(t: float32): float32 <cimport, nodecl> end
 global function ease_out_quad(t: float32): float32 <cimport, nodecl> end
 global function ease_out_cubic(t: float32): float32 <cimport, nodecl> end
@@ -167,6 +219,7 @@ global function ease_out_circ(t: float32): float32 <cimport, nodecl> end
 global function ease_out_back(t: float32): float32 <cimport, nodecl> end
 global function ease_out_elastic(t: float32): float32 <cimport, nodecl> end
 global function ease_out_bounce(t: float32): float32 <cimport, nodecl> end
+
 global function ease_in_sine(t: float32): float32 <cimport, nodecl> end
 global function ease_in_quad(t: float32): float32 <cimport, nodecl> end
 global function ease_in_cubic(t: float32): float32 <cimport, nodecl> end
@@ -177,6 +230,7 @@ global function ease_in_circ(t: float32): float32 <cimport, nodecl> end
 global function ease_in_back(t: float32): float32 <cimport, nodecl> end
 global function ease_in_elastic(t: float32): float32 <cimport, nodecl> end
 global function ease_in_bounce(t: float32): float32 <cimport, nodecl> end
+
 global function ease_inout_sine(t: float32): float32 <cimport, nodecl> end
 global function ease_inout_quad(t: float32): float32 <cimport, nodecl> end
 global function ease_inout_cubic(t: float32): float32 <cimport, nodecl> end
@@ -187,25 +241,30 @@ global function ease_inout_circ(t: float32): float32 <cimport, nodecl> end
 global function ease_inout_back(t: float32): float32 <cimport, nodecl> end
 global function ease_inout_elastic(t: float32): float32 <cimport, nodecl> end
 global function ease_inout_bounce(t: float32): float32 <cimport, nodecl> end
+
 global function ease_inout_perlin(t: float32): float32 <cimport, nodecl> end
+
 global function ease_ping_pong(t: float32, fn1: function(float32): float32, fn2: function(float32): float32): float32 <cimport, nodecl> end
 global function ease_pong_ping(t: float32, fn1: function(float32): float32, fn2: function(float32): float32): float32 <cimport, nodecl> end
 
 global function deg(radians: float32): float32 <cimport, nodecl> end
 global function rad(degrees: float32): float32 <cimport, nodecl> end
+
 global function mini(a: cint, b: cint): cint <cimport, nodecl> end
 global function maxi(a: cint, b: cint): cint <cimport, nodecl> end
 global function absi(a: cint): cint <cimport, nodecl> end
 global function clampi(v: cint, a: cint, b: cint): cint <cimport, nodecl> end
+
 global function minf(a: float32, b: float32): float32 <cimport, nodecl> end
 global function maxf(a: float32, b: float32): float32 <cimport, nodecl> end
 global function absf(a: float32): float32 <cimport, nodecl> end
 global function pmodf(a: float32, b: float32): float32 <cimport, nodecl> end
 global function signf(a: float32): float32 <cimport, nodecl> end
-global function clampf(v: float32, a: float32, b: float32): cint <cimport, nodecl> end
-global function mixf(a: float32, b: float32, t: float32): cint <cimport, nodecl> end
+global function clampf(v: float32, a: float32, b: float32): float32 <cimport, nodecl> end
+global function mixf(a: float32, b: float32, t: float32): float32 <cimport, nodecl> end
 
 global function ptr2(a: *float32 <const>): vec2 <cimport, nodecl> end
+
 global function neg2(a: vec2): vec2 <cimport, nodecl> end
 global function add2(a: vec2, b: vec2): vec2 <cimport, nodecl> end
 global function sub2(a: vec2, b: vec2): vec2 <cimport, nodecl> end
@@ -233,6 +292,7 @@ global function clamp2(v: vec2, a: float32, b: float32): vec2 <cimport, nodecl> 
 
 global function ptr3(a: *float32 <const>): vec3 <cimport, nodecl> end
 global function vec23(a: vec2, z: float32): vec3 <cimport, nodecl> end
+
 global function neg3(a: vec3): vec3 <cimport, nodecl> end
 global function add3(a: vec3, b: vec3): vec3 <cimport, nodecl> end
 global function sub3(a: vec3, b: vec3): vec3 <cimport, nodecl> end
@@ -263,6 +323,7 @@ global function ortho3(left: *vec3, up: *vec3, v: vec3): void <cimport, nodecl> 
 
 global function ptr4(a: *float32 <const>): vec4 <cimport, nodecl> end
 global function vec34(a: vec3, w: float32): vec4 <cimport, nodecl> end
+
 global function neg4(a: vec4): vec4 <cimport, nodecl> end
 global function add4(a: vec4, b: vec4): vec4 <cimport, nodecl> end
 global function sub4(a: vec4, b: vec4): vec4 <cimport, nodecl> end
@@ -288,12 +349,13 @@ global function norm4sq(a: vec4): vec4 <cimport, nodecl> end
 global function finite4(a: vec4): cint <cimport, nodecl> end
 global function mix4(a: vec4, b: vec4, t: float32): vec4 <cimport, nodecl> end
 global function clamp4(v: vec4, a: float32, b: float32): vec4 <cimport, nodecl> end
---global function tricross4(a: vec4, b: vec4, c: vec4): vec4 <cimport, nodecl> end
+--global function cross4(a: vec4, b: vec4, c: vec4): vec4 <cimport, nodecl> end
 
 global function idq(): quat <cimport, nodecl> end
 global function ptrq(a: *float32): quat <cimport, nodecl> end
 global function vec3q(a: vec3, w: float32): quat <cimport, nodecl> end
 global function vec4q(a: vec4): quat <cimport, nodecl> end
+
 global function negq(a: quat): quat <cimport, nodecl> end
 global function conjq(a: quat): quat <cimport, nodecl> end
 global function addq(a: quat, b: quat): quat <cimport, nodecl> end
@@ -303,12 +365,17 @@ global function scaleq(a: quat, s: float32): quat <cimport, nodecl> end
 global function normq(a: quat): quat <cimport, nodecl> end
 global function dotq(a: quat, b: quat): float32 <cimport, nodecl> end
 global function mixq(a: quat, b: quat, t: float32): quat <cimport, nodecl> end
+
 -- global function lerpq(a: quat, b: quat, s: float32): quat <cimport, nodecl> end
 global function slerpq(a: quat, b: quat, s: float32): quat <cimport, nodecl> end
+
 global function rotationq(deg: float32, x: float32, y: float32, z: float32): quat <cimport, nodecl> end
 global function mat44q(M: mat44): quat <cimport, nodecl> end
+
 global function rotate3q_2(v: vec3, q: quat): vec3 <cimport, nodecl> end
 global function rotate3q(v: vec3, r: quat): vec3 <cimport, nodecl> end
+
+-- euler <-> quat
 global function euler(q: quat): vec3 <cimport, nodecl> end
 global function eulerq(pyr_degrees: vec3): quat <cimport, nodecl> end
 
@@ -319,6 +386,7 @@ global function extract33(m: mat33, m4: mat44 <const>): void <cimport, nodecl> e
 global function copy33(m: mat33, a: mat33 <const>): void <cimport, nodecl> end
 global function mulv33(m: mat33, v: vec3): vec3 <cimport, nodecl> end
 global function multiply33x2(m: mat33, a: mat33 <const>, b: mat33 <const>): void <cimport, nodecl> end
+
 global function rotation33(m: mat33, degrees: float32, x: float32, y: float32, z: float32): void <cimport, nodecl> end
 global function rotationq33(m: mat33, q: quat): void <cimport, nodecl> end
 global function rotate33(r: mat33, degrees: float32, x: float32, y: float32, z: float32): void <cimport, nodecl> end
@@ -344,10 +412,12 @@ global function copy44(m: mat44, a: mat44 <const>): void <cimport, nodecl> end
 global function multiply44x2(m: mat44, a: mat44 <const>, b: mat44 <const>): void <cimport, nodecl> end
 global function multiply44x3(m: mat44, a: mat44 <const>, b: mat44 <const>, c: mat44 <const>): void <cimport, nodecl> end
 global function multiply44(m: mat44, a: mat44 <const>): void <cimport, nodecl> end
+
 global function ortho44(m: mat44, l: float32, r: float32, b: float32, t: float32, n: float32, f: float32): void <cimport, nodecl> end
 global function frustum44(m: mat44, l: float32, r: float32, b: float32, t: float32, n: float32, f: float32): void <cimport, nodecl> end
 global function perspective44(m: mat44, fovy_degrees: float32, aspect: float32, nearp: float32, farp: float32): void <cimport, nodecl> end
 global function lookat44(m: mat44, eye: vec3, center: vec3, up: vec3): void <cimport, nodecl> end
+
 global function translation44(m: mat44, x: float32, y: float32, z: float32): void <cimport, nodecl> end
 global function translate44(m: mat44, x: float32, y: float32, z: float32): void <cimport, nodecl> end
 global function relocate44(m: mat44, x: float32, y: float32, z: float32): void <cimport, nodecl> end
@@ -356,19 +426,41 @@ global function rotation44(m: mat44, degrees: float32, x: float32, y: float32, z
 global function rotate44(m: mat44, degrees: float32, x: float32, y: float32, z: float32): void <cimport, nodecl> end
 global function scaling44(m: mat44, x: float32, y: float32, z: float32): void <cimport, nodecl> end
 global function scale44(m: mat44, x: float32, y: float32, z: float32): void <cimport, nodecl> end
+
 global function transpose44(m: mat44, a: mat44 <const>): void <cimport, nodecl> end
 global function det44(M: mat44 <const>): float32 <cimport, nodecl> end
 global function invert44(T: mat44, M: mat44 <const>): boolean <cimport, nodecl> end
+
 global function transform444(m: mat44 <const>, v: vec4 <const>): vec4 <cimport, nodecl> end
 global function unproject44(out: *vec3, xyd: vec3, viewport: vec4, mvp: mat44): boolean <cimport, nodecl> end
-global function transform_axis(c: coord_system <const>, a: AXIS_ENUMS <const>): vec3 <cimport, nodecl> end
-global function rebase44(m: mat44, src_basis: coord_system <const>, dst_basis: coord_system <const>): void <cimport, nodecl> end
+
 global function compose44(m: mat44, t: vec3, q: quat, s: vec3): void <cimport, nodecl> end
 
 global function transform33(m: mat33, p: vec3): vec3 <cimport, nodecl> end
 global function transform444(m: mat44 <const>, p: vec4 <const>): vec4 <cimport, nodecl> end
 global function transform344(m: mat44 <const>, p: vec3 <const>): vec3 <cimport, nodecl> end
 global function transformq(q: quat <const>, v: vec3 <const>): vec3 <cimport, nodecl> end
+
+--[==[
+global function rebase44(m: mat44, src_basis: coord_system <const>, dst_basis: coord_system <const>): void <cimport, nodecl> end
+
+global AXIS_ENUMS: type <cimport, nodecl, using> = @enum(cint) {
+  axis_front = 0,
+  axis_back,
+  axis_left,
+  axis_right,
+  axis_up,
+  axis_down
+}
+
+global coord_system: type <cimport, nodecl> = @union {
+  s: record {
+    x: AXIS_ENUMS,
+    y: AXIS_ENUMS,
+    z: AXIS_ENUMS
+  }
+}
+
 global function transform_axis(basis: coord_system <const>, to: AXIS_ENUMS <const>): vec3 <cimport, nodecl> end
 global function transform_vector(m: mat44 <const>, vector: vec3 <const>): vec3 <cimport, nodecl> end
 global function transform_point(m: mat44 <const>, p: vec3 <const>): vec3 <cimport, nodecl> end
@@ -377,6 +469,7 @@ global function transform_normal(m: mat44 <const>, normal: vec3 <const>): vec3 <
 global function transform_quat(m: mat44 <const>, q: quat <const>): quat <cimport, nodecl> end
 global function transform_matrix(out: mat44, m: mat44 <const>, matrix: mat44 <const>): *[0]float32 <cimport, nodecl> end
 global function transform_scaling(m: mat44 <const>, scaling: vec3 <const>): vec3 <cimport, nodecl> end
+]==]
 
 global function print2(v: vec2): void <cimport, nodecl> end
 global function print3(v: vec3): void <cimport, nodecl> end
@@ -388,24 +481,32 @@ global function print44(m: *[0]float32): void <cimport, nodecl> end
 
 -- audio
 global audio_t: type <cimport, nodecl> = @pointer
+
 global function audio_clip(pathfile: cstring <const>): audio_t <cimport, nodecl> end
 global function audio_stream(pathfile: cstring <const>): audio_t <cimport, nodecl> end
 global function audio_play(s: audio_t, flags: cint): cint <cimport, nodecl> end
+global function audio_play_gain(s: audio_t, flags: cint, gain: float32): cint <cimport, nodecl> end
+global function audio_play_gain_pitch(s: audio_t, flags: cint, gain: float32, pitch: float32): cint <cimport, nodecl> end
+global function audio_play_gain_pitch_pan(s: audio_t, flags: cint, gain: float32, pitch: float32, pan: float32): cint <cimport, nodecl> end
+
 global function audio_volume_clip(gain: float32): float32 <cimport, nodecl> end
 global function audio_volume_stream(gain: float32): float32 <cimport, nodecl> end
 global function audio_volume_master(gain: float32): float32 <cimport, nodecl> end
 
 global AUDIO_FLAGS: type <cimport, nodecl, using> = @enum(cint) {
-  AUDIO_1CH = 0,
+  AUDIO_1CH = 0, -- default
   AUDIO_2CH = 1,
 
   AUDIO_8 = 2,
-  AUDIO_16 = 0,
+  AUDIO_16 = 0,  -- default
   AUDIO_32 = 4,
   AUDIO_FLOAT = 8,
 
-  AUDIO_22KHZ = 0,
-  AUDIO_44KHZ = 16
+  AUDIO_22KHZ = 0, -- default
+  AUDIO_44KHZ = 16,
+  
+  AUDIO_MIXER_GAIN = 0, -- default
+  AUDIO_IGNORE_MIXER_GAIN = 32,
 }
 
 global function audio_queue(samples: pointer <const>, num_samples: cint, flags: cint): cint <cimport, nodecl> end
@@ -435,7 +536,7 @@ global gjk_simplex: type <cimport, nodecl> = @record {
   cnt: cint,
   v: [4]gjk_vertex,
   bc: [4]float32,
-  D: [4]float32
+  D: float32
 }
 
 global gjk_result: type <cimport, nodecl> = @record {
@@ -517,11 +618,13 @@ global function new_frustum(...: cvarargs): frustum <cimport "frustum", nodecl> 
 
 global hit: type <cimport, nodecl> = @record {
   u1: union {
+    -- general case
     depth: float32,
-    s1: record {
-      t0: float32,
-      t1: float32
-    },
+    
+    -- rays only: penetration (t0) and extraction (t1) points along ray line
+    s1: record { t0: float32, t1: float32 },
+    
+    -- gjk only
     s2: record {
       hits: cint,
       p0: vec3,
@@ -530,20 +633,17 @@ global hit: type <cimport, nodecl> = @record {
       iterations: cint
     }
   },
-  u2: union {
-    p: vec3,
-    contact_point: vec3
-  },
-  u3: union {
-    n: vec3,
-    normal: vec3
-  }
+  u2: union { p: vec3, contact_point: vec3 },
+  u3: union { n: vec3, normal: vec3 }
 }
 
 global function new_hit(...: cvarargs): hit <cimport "hit", nodecl> end
 
+-- line/segment
 global function line_distance2_point(l: line, p: vec3): float32 <cimport, nodecl> end
 global function line_closest_point(l: line, p: vec3): vec3 <cimport, nodecl> end
+
+-- ray
 global function ray_test_plane(r: ray, p4: vec3): float32 <cimport, nodecl> end
 global function ray_test_triangle(r: ray, t: triangle): float32 <cimport, nodecl> end
 global function ray_test_sphere(t0: *float32, t1: *float32, r: ray, s: sphere): cint <cimport, nodecl> end
@@ -552,6 +652,8 @@ global function ray_hit_plane(r: ray, p: plane): *hit <cimport, nodecl> end
 global function ray_hit_triangle(r: ray, t: triangle): *hit <cimport, nodecl> end
 global function ray_hit_sphere(r: ray, s: sphere): *hit <cimport, nodecl> end
 global function ray_hit_aabb(r: ray, a: aabb): *hit <cimport, nodecl> end
+
+-- sphere
 global function sphere_closest_point(s: sphere, p: vec3): vec3 <cimport, nodecl> end
 global function sphere_hit_aabb(s: sphere, a: aabb): *hit <cimport, nodecl> end
 global function sphere_hit_capsule(s: sphere, c: capsule): *hit <cimport, nodecl> end
@@ -560,6 +662,8 @@ global function sphere_test_aabb(s: sphere, a: aabb): cint <cimport, nodecl> end
 global function sphere_test_capsule(s: sphere, c: capsule): cint <cimport, nodecl> end
 global function sphere_test_poly(s: sphere, p: poly): cint <cimport, nodecl> end
 global function sphere_test_sphere(a: sphere, b: sphere): cint <cimport, nodecl> end
+
+-- aabb
 global function aabb_closest_point(a: aabb, p: vec3): vec3 <cimport, nodecl> end
 global function aabb_distance2_point(a: aabb, p: vec3): float32 <cimport, nodecl> end
 global function aabb_contains_point(a: aabb, p: vec3): cint <cimport, nodecl> end
@@ -570,6 +674,8 @@ global function aabb_test_aabb(a: aabb, b: aabb): cint <cimport, nodecl> end
 global function aabb_test_capsule(a: aabb, c: capsule): cint <cimport, nodecl> end
 global function aabb_test_poly(a: aabb, p: poly): cint <cimport, nodecl> end
 global function aabb_test_sphere(a: aabb, s: sphere): cint <cimport, nodecl> end
+
+-- capsule
 global function capsule_distance2_point(c: capsule, p: vec3): float32 <cimport, nodecl> end
 global function capsule_closest_point(c: capsule, p: vec3): vec3 <cimport, nodecl> end
 global function capsule_hit_aabb(c: capsule, a: aabb): *hit <cimport, nodecl> end
@@ -579,50 +685,58 @@ global function capsule_test_aabb(c: capsule, a: aabb): cint <cimport, nodecl> e
 global function capsule_test_capsule(a: capsule, b: capsule): cint <cimport, nodecl> end
 global function capsule_test_poly(c: capsule, p: poly): cint <cimport, nodecl> end
 global function capsule_test_sphere(c: capsule, s: sphere): cint <cimport, nodecl> end
+
+-- poly: query
 global function poly_test_sphere(p: poly, s: sphere): cint <cimport, nodecl> end
 global function poly_test_aabb(p: poly, a: aabb): cint <cimport, nodecl> end
 global function poly_test_capsule(p: poly, c: capsule): cint <cimport, nodecl> end
 global function poly_test_poly(a: poly, b: poly): cint <cimport, nodecl> end
+
+-- poly: query transformed
 global function poly_test_sphere_transform(p: poly, pos3: vec3, rot33: mat33, s: sphere): cint <cimport, nodecl> end
 global function poly_test_aabb_transform(p: poly, pos3: vec3, rot33: mat33, a: aabb): cint <cimport, nodecl> end
 global function poly_test_capsule_transform(p: poly, pos3: vec3, rot33: mat33, c: capsule): cint <cimport, nodecl> end
 global function poly_test_poly_transform(a: poly, apos3: vec3, arot33: mat33, b: poly, bpos3: vec3, brot33: mat33): cint <cimport, nodecl> end
+
+-- poly: gjk result
 global function poly_hit_sphere(res: *gjk_result, p: poly, s: sphere): cint <cimport, nodecl> end
 global function poly_hit_aabb(res: *gjk_result, p: poly, a: aabb): cint <cimport, nodecl> end
 global function poly_hit_capsule(res: *gjk_result, p: poly, c: capsule): cint <cimport, nodecl> end
 global function poly_hit_poly(res: *gjk_result, a: poly, b: poly): cint <cimport, nodecl> end
+
+-- poly: gjk result transformed
 global function poly_hit_sphere_transform(res: *gjk_result, p: poly, pos3: vec3, rot33: mat33, s: sphere): cint <cimport, nodecl> end
 global function poly_hit_aabb_transform(res: *gjk_result, p: poly, pos3: vec3, rot33: mat33, a: aabb): cint <cimport, nodecl> end
 global function poly_hit_capsule_transform(res: *gjk_result, p: poly, pos3: vec3, rot33: mat33, c: capsule): cint <cimport, nodecl> end
 global function poly_hit_poly_transform(res: *gjk_result, p: poly, at3: vec3, ar33: mat33, c: capsule, bt3: vec3, br33: mat33): cint <cimport, nodecl> end
+
 global function plane4(p: vec3, n: vec3): vec4 <cimport, nodecl> end
+
 global function frustum_build(projview: mat44): frustum <cimport, nodecl> end
 global function frustum_test_sphere(f: frustum, s: sphere): cint <cimport, nodecl> end
 global function frustum_test_aabb(f: frustum, a: aabb): cint <cimport, nodecl> end
+
 global function poly_alloc(cnt: cint): poly <cimport, nodecl> end
 global function poly_free(p: *poly): void <cimport, nodecl> end
-global function pyramid(from: vec3, to: vec3, size: float32): poly <cimport, nodecl> end
-global function diamond(from: vec3, to: vec3, size: float32): poly <cimport, nodecl> end
+
+global function pyramid(from: vec3, to: vec3, size: float32): poly <cimport, nodecl> end -- poly_free() required
+global function diamond(from: vec3, to: vec3, size: float32): poly <cimport, nodecl> end -- poly_free() required
 
 -- cooker
 global COOKER_FLAGS: type <cimport, nodecl, using> = @enum(cint) {
-  COOKER_ASYNC = 1
+  COOKER_SYNC = 0,
+  COOKER_ASYNC = 1,
+  COOKER_CANCELABLE = 2
 }
 
-global function cooker_config(art_path: cstring <const>, tools_path: cstring <const>, fwk_ini: cstring <const>): void <cimport, nodecl> end
-global function cooker_start(masks: cstring <const>, flags: cint): boolean <cimport, nodecl> end
+global function cooker_config(art_path: cstring <const>, tools_path: cstring <const>, fwk_ini: cstring <const>): void <cimport, nodecl> end -- "art/", "art/tools/", "fwk.ini"
+global function cooker_start(masks: cstring <const>, flags: cint): boolean <cimport, nodecl> end -- "**"
 global function cooker_stop(): void <cimport, nodecl> end
-global function cooker_progress(): cint <cimport, nodecl> end
-global function cooker_jobs(): cint <cimport, nodecl> end
+global function cooker_cancel(): void <cimport, nodecl> end
+global function cooker_progress(): cint <cimport, nodecl> end -- [0..100]
+global function cooker_jobs(): cint <cimport, nodecl> end -- [0..N]
 
 -- data
-global function data_push(source: cstring <const>): boolean <cimport, nodecl> end
-global function data_count(keypath: cstring <const>): cint <cimport, nodecl> end
-global function data_int(...: cvarargs): cint <cimport, nodecl> end
-global function data_float(...: cvarargs): float64 <cimport, nodecl> end
-global function data_string(...: cvarargs): cstring <cimport, nodecl> end
-global function data_pop(): boolean <cimport, nodecl> end
-
 global data_t: type <cimport, nodecl> = @union {
   s: cstring,
   f: float64,
@@ -631,193 +745,401 @@ global data_t: type <cimport, nodecl> = @union {
   arr: *[0]pointer
 }
 
-global function data_get(is_string: boolean, keypath: cstring <const>): data_t <cimport, nodecl> end
+-- data api
+global function data_push(source: cstring <const>): boolean <cimport, nodecl> end
+global function data_find(type_keypath: cstring <const>): *data_t <cimport, nodecl> end
+global function data_get(type_keypath: cstring <const>): data_t <cimport, nodecl> end
+--global function data_count(keypath: cstring <const>): cint <cimport, nodecl> end
+global function data_count(...: cvarargs): cint <cimport, nodecl> end
+global function data_int(...: cvarargs): cint <cimport, nodecl> end
+global function data_float(...: cvarargs): float64 <cimport, nodecl> end
+global function data_string(...: cvarargs): cstring <cimport, nodecl> end
+global function data_pop(): boolean <cimport, nodecl> end
 
 -- dll
+--[[
+  !!! `filename` must contain extension
+  
+  load dynamic library `file` and search for `symbol`
+  return: NULL if not found, found symbol otherwise.
+  filename: path to dynamic library file. must contain extension.
+  symbol: symbol name. must not be NULL.
+  see: dlopen^, dlclose^
+  
+  > bool (*plugin_init)(void) = dll("plugin.dll", "init");
+  > assert(plugin_init());
+]]
+
 global function dll(filename: cstring <const>, symbol: cstring <const>): pointer <cimport, nodecl> end
 
--- ds
-global function less_int(a: cint, b: cint): cint <cimport, nodecl> end
-global function less_u64(a: uint64, b: uint64): cint <cimport, nodecl> end
-global function less_ptr(a: pointer, b: pointer): cint <cimport, nodecl> end
-global function less_str(a: cstring, b: cstring): cint <cimport, nodecl> end
-global function unhash_32(x: uint32): uint32 <cimport, nodecl> end
-global function hash_32(x: uint32): uint32 <cimport, nodecl> end
-global function hash_64(x: uint64): uint64 <cimport, nodecl> end
-global function hash_flt(x: float64): uint64 <cimport, nodecl> end
-global function hash_str(str: cstring <const>): uint64 <cimport, nodecl> end
-global function hash_int(key: cint): uint64 <cimport, nodecl> end
-global function hash_ptr(ptr: pointer <const>): uint64 <cimport, nodecl> end
-global function vrealloc(p: pointer, sz: csize): pointer <cimport, nodecl> end
-global function vlen(p: pointer): csize <cimport, nodecl> end
-
-global set_item: type <cimport, nodecl> = @record {
-  next: *set_item,
-  keyhash: uint64,
-  key: pointer,
-  super: pointer
-}
-
-global set: type <cimport, nodecl> = @record {
-  array: **[0]set_item,
-  cmp: function(pointer, pointer): cint,
-  hash: function(pointer): uint64,
-  count: cint
-}
-
-global function set_init(m: *set): void <cimport, nodecl> end
-global function set_free(m: *set): void <cimport, nodecl> end
-global function set_insert(m: *set, p: *set_item, key: pointer, keyhash: uint64, super: pointer): void <cimport, nodecl> end
-global function set_erase(m: *set, key: pointer, keyhash: uint64): void <cimport, nodecl> end
-global function set_find(m: *set <const>, key: pointer, keyhash: uint64): pointer <cimport, nodecl> end
-global function set_count(m: *set <const>): cint <cimport, nodecl> end
-global function set_gc(m: *set): void <cimport, nodecl> end
-
-global pair: type <cimport, nodecl> = @record {
-  next: *pair,
-  keyhash: uint64,
-  key: pointer,
-  value: pointer,
-  super: pointer
-}
-
-global map: type <cimport, nodecl> = @record {
-  array: **[0]pair,
-  cmp: function(pointer, pointer): cint,
-  hash: function(pointer): uint64,
-  count: cint
-}
-
-global function map_init(m: *map): void <cimport, nodecl> end
-global function map_free(m: *map): void <cimport, nodecl> end
-global function map_insert(m: *map, p: *pair, key: pointer, value: pointer, keyhash: uint64, super: pointer): void <cimport, nodecl> end
-global function map_erase(m: *map, key: pointer, keyhash: uint64): void <cimport, nodecl> end
-global function map_find(m: *map, key: pointer, keyhash: uint64): pointer <cimport, nodecl> end
-global function map_count(m: *map): cint <cimport, nodecl> end
-global function map_gc(m: *map): void <cimport, nodecl> end
-
 -- editor
-global function editor(): void <cimport, nodecl> end
-global function editor_active(): boolean <cimport, nodecl> end
+global function editor_pick(mouse_x: float32, mouse_y: float32): vec3 <cimport, nodecl> end
+global function editor_path(path: cstring <const>): cstring <cimport, nodecl> end
+
+-- open file dialog
+global function dialog_load(): cstring <cimport, nodecl> end
+global function dialog_save(): cstring <cimport, nodecl> end
+
+-- transform gizmos
 global function gizmo(pos: *vec3, rot: *vec3, sca: *vec3): cint <cimport, nodecl> end
 global function gizmo_active(): boolean <cimport, nodecl> end
+global function gizmo_hover(): boolean <cimport, nodecl> end
 
--- file
-global function file_list(path: cstring <const>, masks: cstring <const>): *[0]cstring <cimport, nodecl> end
+-- localization kit (I18N, L10N)
+
+-- set context language: enUS, ptBR, esES, ...
+global function kit_locale(langcode_iso639_1: cstring <const>): void <cimport, nodecl> end
+
+-- set context variable
+global function kit_set(variable: cstring <const>, value: cstring <const>): void <cimport, nodecl> end
+
+-- reset all variables in context
+global function kit_reset(): void <cimport, nodecl> end
+
+-- insert single translation
+global function kit_insert(id: cstring <const>, translation: cstring <const>): void <cimport, nodecl> end
+
+-- load translations file (xlsx)
+global function kit_load(filename: cstring <const>): boolean <cimport, nodecl> end
+
+-- merge translations file into existing context
+global function kit_merge(filename: cstring <const>): boolean <cimport, nodecl> end
+
+-- delete all translations
+global function kit_clear(): void <cimport, nodecl> end
+
+-- perform a translation, given current locale
+global function kit_translate(id: cstring <const>): cstring <cimport, nodecl> end
+
+-- perform a translation given explicit locale
+global function kit_translate2(id: cstring <const>, langcode_iso639_1: cstring <const>): cstring <cimport, nodecl> end
+
+global function kit_dump_state(fp: *FILE): void <cimport, nodecl> end
+
+-- file 
+-- physical filesystem. files
+global function file_list(path: cstring <const>, masks: cstring <const>): *[0]cstring <cimport, nodecl> end -- **.png;*.c
+global function file_write(file: cstring <const>, ptr: pointer <const>, len: cint): boolean <cimport, nodecl> end
+global function file_append(file: cstring <const>, ptr: pointer <const>, len: cint): boolean <cimport, nodecl> end
 global function file_read(filename: cstring <const>): cstring <cimport, nodecl> end
 global function file_load(filename: cstring <const>, len: *cint): cstring <cimport, nodecl> end
 global function file_size(pathfile: cstring <const>): uint64 <cimport, nodecl> end
 global function file_directory(pathfile: cstring <const>): boolean <cimport, nodecl> end
-global function file_path(pathfile: cstring <const>): cstring <cimport, nodecl> end
-global function file_name(pathfile: cstring <const>): cstring <cimport, nodecl> end
-global function file_ext(pathfile: cstring <const>): cstring <cimport, nodecl> end
-global function file_id(pathfile: cstring <const>): cstring <cimport, nodecl> end
-global function file_normalize(pathfile: cstring <const>): cstring <cimport, nodecl> end
---global function file_normalize_with_folder(pathfile: cstring <const>): cstring <cimport, nodecl> end
-global function file_stamp(pathfile: cstring <const>): uint64 <cimport, nodecl> end
-global function file_stamp_epoch(pathfile: cstring <const>): uint64 <cimport, nodecl> end
+
+global function file_pathabs(pathfile: cstring <const>): cstring <cimport, nodecl> end   -- ../dir/./file.ext -> c:/prj/dir/file.ext
+global function file_path(pathfile: cstring <const>): cstring <cimport, nodecl> end      -- c:/prj/dir/file.ext -> c:/prj/dir/
+global function file_name(pathfile: cstring <const>): cstring <cimport, nodecl> end      -- c:/prj/dir/file.ext -> file.ext
+global function file_ext(pathfile: cstring <const>): cstring <cimport, nodecl> end       -- c:/prj/dir/file.ext -> .ext
+global function file_id(pathfile: cstring <const>): cstring <cimport, nodecl> end        -- c:/prj/dir/file.ext -> file/dir/prj (name then alphabetical)
+global function file_normalize(pathfile: cstring <const>): cstring <cimport, nodecl> end -- c:/prj/dir/file.ext -> c/prj/dir/file_ext
+--global function file_normalize_with_folder(pathfile: cstring <const>): cstring <cimport, nodecl> end -- c:/prj/dir/file.ext -> dir/file_ext
+
+global function file_stamp(pathfile: cstring <const>): uint64 <cimport, nodecl> end        -- 20210319113316 (datetime in base10)
+global function file_stamp_epoch(pathfile: cstring <const>): uint64 <cimport, nodecl> end  -- 1616153596 (seconds since unix epoch)
+global function file_counter(pathfile: cstring <const>): cstring <cimport, nodecl> end     -- fwk.ini -> fwk(001).ini -> fwk(002).ini [...]
+
 global function file_exist(pathfile: cstring <const>): boolean <cimport, nodecl> end
 global function file_delete(pathfile: cstring <const>): boolean <cimport, nodecl> end
 global function file_copy(src: cstring <const>, dst: cstring <const>): boolean <cimport, nodecl> end
 global function file_move(src: cstring <const>, dst: cstring <const>): boolean <cimport, nodecl> end
+
 global function file_temp(): *FILE <cimport, nodecl> end
 global function file_tempname(): cstring <cimport, nodecl> end
+
+-- compressed zip files
+global function file_zip_list(zipname: cstring <const>): *cstring <cimport, nodecl> end
+global function file_zip_extract(zipname: cstring <const>, filename: cstring <const>): cstring <cimport, nodecl> end
+global function file_zip_append(zipname: cstring <const>, filename: cstring <const>, clevel: cint): boolean <cimport, nodecl> end
+global function file_zip_appendmem(zipname: cstring <const>, entryname: cstring <const>, ptr: pointer <const>, len: cuint, clevel: cint): boolean <cimport, nodecl> end
+
+-- storage (emscripten only)
+--[[
+Mounts local storage folder for writing. Useful for Emscripten only. @path_folder: "/save" for example
+Reads local storage to memory. Usually call it one time only, after mount. Useful for Emscripten only.
+Writes memory contents to local storage. Usually call it after all fclose
+]]
+global function storage_mount(folder: cstring <const>): void <cimport, nodecl> end
+global function storage_read(): void <cimport, nodecl> end
+global function storage_flush(): void <cimport, nodecl> end
+
+-- virtual filesystem
 global function vfs_mount(mount_point: cstring <const>): boolean <cimport, nodecl> end
-global function vfs_list(masks: cstring <const>): *[0]cstring <cimport, nodecl> end
+global function vfs_list(masks: cstring <const>): *[0]cstring <cimport, nodecl> end -- **.png;*.c
+
 global function vfs_read(pathfile: cstring <const>): cstring <cimport, nodecl> end
 global function vfs_load(pathfile: cstring <const>, size: *cint): cstring <cimport, nodecl> end
 global function vfs_size(pathfile: cstring <const>): cint <cimport, nodecl> end
-global function vfs_resolve(fuzzyname: cstring <const>): cstring <cimport, nodecl> end
-global function vfs_find(pathfile: cstring <const>): cstring <cimport, nodecl> end
-global function vfs_handle(pathfile: cstring <const>): *FILE <cimport, nodecl> end
+
+global function vfs_resolve(fuzzyname: cstring <const>): cstring <cimport, nodecl> end -- guess best match. @todo: fuzzy path
+global function vfs_find(pathfile: cstring <const>): cstring <cimport, nodecl> end     -- returns filename to extracted temporary file, so it can be read by foreign/3rd party libs
+global function vfs_handle(pathfile: cstring <const>): *FILE <cimport, nodecl> end     -- same as above, but returns file handle instead. preferred way, will clean descriptors at exit
+
+-- cache
 global function cache_insert(key: cstring <const>, value: pointer, size: cint): pointer <cimport, nodecl> end
 global function cache_lookup(key: cstring <const>, size: *cint): pointer <cimport, nodecl> end
 
+-- ini
+
+global ini_t: type <cimport, nodecl> = @record {
+  base: map,
+  tmp: record {
+    p: pair,
+    key: cstring,
+    val: cstring
+  },
+  ptr: pointer,
+  tmpval: *cstring,
+  typed_cmp: function(a: cstring, b: cstring): cint,
+  typed_hash: function(a: cstring): uint64
+}
+
+global function ini(filename: cstring <const>): ini_t <cimport, nodecl> end
+global function ini_from_mem(data: cstring <const>): ini_t <cimport, nodecl> end
+global function ini_write(filename: cstring <const>, section: cstring <const>, key: cstring <const>, value: cstring <const>): boolean <cimport, nodecl> end
+
+-- font
+
+-- font size tags
+global FONT_H1: cstring <cimport, nodecl, const> -- largest
+global FONT_H2: cstring <cimport, nodecl, const>
+global FONT_H3: cstring <cimport, nodecl, const>
+global FONT_H4: cstring <cimport, nodecl, const>
+global FONT_H5: cstring <cimport, nodecl, const>
+global FONT_H6: cstring <cimport, nodecl, const> -- largest
+
+-- font color tags
+global FONT_COLOR1: cstring <cimport, nodecl, const>
+global FONT_COLOR2: cstring <cimport, nodecl, const>
+global FONT_COLOR3: cstring <cimport, nodecl, const>
+global FONT_COLOR4: cstring <cimport, nodecl, const>
+global FONT_COLOR5: cstring <cimport, nodecl, const>
+global FONT_COLOR6: cstring <cimport, nodecl, const>
+global FONT_COLOR7: cstring <cimport, nodecl, const>
+global FONT_COLOR8: cstring <cimport, nodecl, const>
+global FONT_COLOR9: cstring <cimport, nodecl, const>
+global FONT_COLOR10: cstring <cimport, nodecl, const>
+
+-- font face tags
+global FONT_FACE1: cstring <cimport, nodecl, const>
+global FONT_FACE2: cstring <cimport, nodecl, const>
+global FONT_FACE3: cstring <cimport, nodecl, const>
+global FONT_FACE4: cstring <cimport, nodecl, const>
+global FONT_FACE5: cstring <cimport, nodecl, const>
+global FONT_FACE6: cstring <cimport, nodecl, const>
+
+-- font align tags
+global FONT_LEFT: cstring <cimport, nodecl, const>
+global FONT_CENTER: cstring <cimport, nodecl, const>
+global FONT_RIGHT: cstring <cimport, nodecl, const>
+global FONT_TOP: cstring <cimport, nodecl, const>
+global FONT_MIDDLE: cstring <cimport, nodecl, const>
+global FONT_BASELINE: cstring <cimport, nodecl, const>
+global FONT_BOTTOM: cstring <cimport, nodecl, const>
+
+-- font flags
+global FONT_FLAGS: type <cimport, nodecl, using> = @enum(cint) {
+  -- font atlas size
+  FONT_512 = 0x0,
+  FONT_1024 = 0x1,
+  FONT_2048 = 0x2,
+  FONT_4096 = 0x4,
+
+  -- font oversampling
+  FONT_NO_OVERSAMPLE = 0x0,
+  FONT_OVERSAMPLE_X = 0x08,
+  FONT_OVERSAMPLE_Y = 0x10,
+
+  -- unicode ranges
+  FONT_ASCII = 0x800, -- Compatible charset
+  FONT_AR = 0x001000, -- Arabic and Arabic-Indic digits
+  FONT_ZH = 0x002000, -- Chinese Simplified (@todo: add ZH_FULL)
+  FONT_EL = 0x004000, -- Greek, Coptic, modern Georgian, Svan, Mingrelian, Ancient Greek
+  FONT_EM = 0x008000, -- Emoji
+  FONT_EU = 0x010000, -- Eastern/western Europe, IPA, Latin ext A/B
+  FONT_HE = 0x020000, -- Hebrew, Yiddish, Ladino, and other diaspora languages
+  FONT_JP = 0x040000, -- Hiragana, Katakana, Punctuations, Half-width chars
+  FONT_KR = 0x080000, -- Korean, Hangul
+  FONT_RU = 0x100000, -- Cyrillic + ext A/B
+  FONT_TH = 0x200000, -- Thai
+  FONT_VI = 0x400000, -- Vietnamese
+  FONT_CJK = 0x002000|0x040000|0x080000,
+
+  -- FONT_DEFAULTS = FONT_512 | FONT_NO_OVERSAMPLE | FONT_ASCII,
+}
+
+-- configures
+global function font_face(face_tag: cstring <const>, filename_ttf: cstring <const>, font_size: float32, flags: cuint): void <cimport, nodecl> end
+global function font_face_from_mem(tag: cstring <const>, ttf_buffer: pointer <const>, ttf_len: cuint, font_size: float32, flags: cuint): void <cimport, nodecl> end
+global function font_scales(face_tag: cstring <const>, h1: float32, h2: float32, h3: float32, h4: float32, h5: float32, h6: float32): void <cimport, nodecl> end
+global function font_color(color_tag: cstring <const>, color: uint32): void <cimport, nodecl> end
+
+-- commands
+global function font_xy(): vec2 <cimport, nodecl> end
+global function font_goto(x: float32, y: float32): void <cimport, nodecl> end
+global function font_print(text: cstring <const>): vec2 <cimport, nodecl> end
+global function font_rect(text: cstring <const>): vec2 <cimport, nodecl> end
+--[[
+global function font_clip(topleft: vec2, bottomright: vec2): void <cimport, nodecl> end
+global function font_wrap(topleft: vec2, bottomright: vec2): void <cimport, nodecl> end
+]]
+
+-- syntax highlighting
+global function font_colorize(text: cstring <const>, comma_types: cstring <const>, comma_keywords: cstring <const>): pointer <cimport, nodecl> end -- comma separated tokens. expensive, please cache result.
+global function font_highlight(text: cstring <const>, colors: pointer <const>): vec2 <cimport, nodecl> end
+
 -- input
-global function input_use(controller_id: cint): cint <cimport, nodecl> end
+global function input_use(controller_id: cint): cint <cimport, nodecl> end -- [0..3]
+
+-- basic polling api (read input at current frame)
 global function input(vk: cint): float32 <cimport, nodecl> end
 global function input2(vk: cint): vec2 <cimport, nodecl> end
 global function input_diff(vk: cint): float32 <cimport, nodecl> end
 global function input_diff2(vk: cint): vec2 <cimport, nodecl> end
+
+-- extended polling api (read input at Nth frame ago)
 global function input_frame(vk: cint, frame: cint): float32 <cimport, nodecl> end
 global function input_frame2(vk: cint, frame: cint): vec2 <cimport, nodecl> end
 global function input_frames(vk: cint, frame: cint): cstring <cimport, nodecl> end
-global function input_up(vk: cint): cint <cimport, nodecl> end
-global function input_down(vk: cint): cint <cimport, nodecl> end
-global function input_held(vk: cint): cint <cimport, nodecl> end
-global function input_idle(vk: cint): cint <cimport, nodecl> end
-global function input_click(vk: cint, ms: cint): cint <cimport, nodecl> end
-global function input_click2(vk: cint, ms: cint): cint <cimport, nodecl> end
-global function input_repeat(vk: cint, ms: cint): cint <cimport, nodecl> end
-global function input_chord2(vk1: cint, vk2: cint): cint <cimport, nodecl> end
-global function input_chord3(vk1: cint, vk2: cint, vk3: cint): cint <cimport, nodecl> end
-global function input_chord4(vk1: cint, vk2: cint, vk3: cint, vk4: cint): cint <cimport, nodecl> end
-global function input_filter_positive(v: float32): float32 <cimport, nodecl> end
-global function input_filter_positive2(v: vec2): vec2 <cimport, nodecl> end
-global function input_filter_deadzone(v: vec2, deadzone: float32): vec2 <cimport, nodecl> end
-global function input_filter_deadzone_4way(v: vec2, deadzone: float32): vec2 <cimport, nodecl> end
+
+-- events api
+global function input_up(vk: cint):   cint <cimport, nodecl> end -- ON -> OFF (release)
+global function input_down(vk: cint): cint <cimport, nodecl> end -- OFF -> ON (trigger)
+global function input_held(vk: cint): cint <cimport, nodecl> end -- ON -> ON (pressed)
+global function input_idle(vk: cint): cint <cimport, nodecl> end -- OFF -> OFF
+
+global function input_click(vk: cint, ms: cint):  cint <cimport, nodecl> end -- OFF -> ON -> OFF
+global function input_click2(vk: cint, ms: cint): cint <cimport, nodecl> end -- OFF -> ON -> OFF -> ON -> OFF
+global function input_repeat(vk: cint, ms: cint): cint <cimport, nodecl> end -- [...] ON -> ON -> ON
+
+global function input_chord2(vk1: cint, vk2: cint): cint <cimport, nodecl> end -- all vk1 && vk2 are ON
+global function input_chord3(vk1: cint, vk2: cint, vk3: cint): cint <cimport, nodecl> end -- all vk1 && vk2 && vk3 are ON
+global function input_chord4(vk1: cint, vk2: cint, vk3: cint, vk4: cint): cint <cimport, nodecl> end -- all vk1 && vk2 && vk3 && vk4 are ON
+
+-- 1d/2d filters
+global function input_filter_positive(v: float32): float32 <cimport, nodecl> end -- [-1..1] -> [0..1]
+global function input_filter_positive2(v: vec2): vec2 <cimport, nodecl> end      -- [-1..1] -> [0..1]
+global function input_filter_deadzone(v: vec2, deadzone_treshold: float32): vec2 <cimport, nodecl> end
+global function input_filter_deadzone_4way(v: vec2, deadzone_treshold: float32): vec2 <cimport, nodecl> end
+
+-- multi-touch 
+global TOUCH_BUTTONS: type <cimport, nodecl, using> = @enum(cint) {
+  TOUCH_0 = 0, -- defaults to left screen area. input_touch_area() to override
+  TOUCH_1,     -- defaults to right screen area. input_touch_area() to override
+}
+
+global function input_touch_area(button: cuint, begin_coord_ndc: vec2, end_coord_ndc: vec2): void <cimport, nodecl> end
+global function input_touch(button: cuint, sensitivity: float32): vec2 <cimport, nodecl> end -- absolute position in 2d coords
+global function input_touch_delta(button: cuint, sensitivity: float32): vec2 <cimport, nodecl> end -- delta from previous position
+global function input_touch_delta_from_origin(button: cuint, sensitivity: float32): vec2 <cimport, nodecl> end -- relative position from initial touch
+global function input_touch_active(): boolean <cimport, nodecl> end
+
+-- utils
 global function input_demo(): void <cimport, nodecl> end
 global function input_send(vk: cint): void <cimport, nodecl> end
 global function input_save_state(id: cint, size: *cint): pointer <cimport, nodecl> end
 global function input_load_state(id: cint, ptr: pointer, size: cint): boolean <cimport, nodecl> end
+global function input_keychar(code: cuint): cchar <cimport, nodecl> end -- Converts keyboard code to its latin char (if any)
+global function input_anykey(): cint <cimport, nodecl> end
 
 global INPUT_ENUMS: type <cimport, nodecl, using> = @enum(cint) {
+  -- bits: x104 keyboard, x3 mouse, x15 gamepad, x7 window
+  -- keyboard gaming keys (53-bit): first-class keys for gaming
   KEY_ESC = 0,
   KEY_TICK, KEY_1,KEY_2,KEY_3,KEY_4,KEY_5,KEY_6,KEY_7,KEY_8,KEY_9,KEY_0,  KEY_BS,
-  KEY_TAB, KEY_Q,KEY_W,KEY_E,KEY_R,KEY_T,KEY_Y,KEY_U,KEY_I,KEY_O,KEY_P,
-  KEY_CAPS, KEY_A,KEY_S,KEY_D,KEY_F,KEY_G,KEY_H,KEY_J,KEY_K,KEY_L, KEY_ENTER,
-  KEY_LSHIFT,KEY_Z,KEY_X,KEY_C,KEY_V,KEY_B,KEY_N,KEY_M, KEY_RSHIFT, KEY_UP,
-  KEY_LCTRL,KEY_LALT,KEY_SPACE,KEY_RALT,KEY_RCTRL,  KEY_LEFT,KEY_DOWN,KEY_RIGHT,
-  KEY_INS,KEY_HOME,KEY_PGUP,KEY_DEL,KEY_END,KEY_PGDN,
-  KEY_LMETA,KEY_RMETA,KEY_MENU,KEY_PRINT,KEY_PAUSE,KEY_SCROLL,KEY_NUMLOCK,
-  KEY_MINUS,KEY_EQUAL,KEY_LSQUARE,KEY_RSQUARE,KEY_SEMICOLON,KEY_QUOTE,KEY_HASH,KEY_BAR,KEY_COMMA,KEY_DOT,KEY_SLASH,
-  KEY_F1,KEY_F2,KEY_F3,KEY_F4,KEY_F5,KEY_F6,KEY_F7,KEY_F8,KEY_F9,KEY_F10,KEY_F11,KEY_F12,
-  KEY_PAD1,KEY_PAD2,KEY_PAD3,KEY_PAD4,KEY_PAD5,KEY_PAD6,KEY_PAD7,KEY_PAD8,KEY_PAD9,KEY_PAD0,
-  KEY_PADADD,KEY_PADSUB,KEY_PADMUL,KEY_PADDIV,KEY_PADDOT,KEY_PADENTER,
+  KEY_TAB,   KEY_Q,KEY_W,KEY_E,KEY_R,KEY_T,KEY_Y,KEY_U,KEY_I,KEY_O,KEY_P,
+  KEY_CAPS,     KEY_A,KEY_S,KEY_D,KEY_F,KEY_G,KEY_H,KEY_J,KEY_K,KEY_L, KEY_ENTER,
+  KEY_LSHIFT,       KEY_Z,KEY_X,KEY_C,KEY_V,KEY_B,KEY_N,KEY_M,        KEY_RSHIFT,            KEY_UP,
+  KEY_LCTRL,KEY_LALT,               KEY_SPACE,                KEY_RALT,KEY_RCTRL,  KEY_LEFT,KEY_DOWN,KEY_RIGHT,
+
+  -- for completeness, secondary keys below (52-bit). beware!
+  KEY_INS,KEY_HOME,KEY_PGUP,KEY_DEL,KEY_END,KEY_PGDN, -- beware: different behavior win/osx (also, osx: no home/end).
+  KEY_LMETA,KEY_RMETA,KEY_MENU,KEY_PRINT,KEY_PAUSE,KEY_SCROLL,KEY_NUMLOCK, -- beware: may trigger unexpected OS behavior. (@todo: add RSHIFT here for win?)
+  KEY_MINUS,KEY_EQUAL,KEY_LSQUARE,KEY_RSQUARE,KEY_SEMICOLON,KEY_QUOTE,KEY_HASH,KEY_BAR,KEY_COMMA,KEY_DOT,KEY_SLASH, -- beware: non-us keyboard layouts
+  KEY_F1,KEY_F2,KEY_F3,KEY_F4,KEY_F5,KEY_F6,KEY_F7,KEY_F8,KEY_F9,KEY_F10,KEY_F11,KEY_F12, -- beware: complicated on laptops/osx
+  KEY_PAD1,KEY_PAD2,KEY_PAD3,KEY_PAD4,KEY_PAD5,KEY_PAD6,KEY_PAD7,KEY_PAD8,KEY_PAD9,KEY_PAD0, -- beware: complicated on laptops
+  KEY_PADADD,KEY_PADSUB,KEY_PADMUL,KEY_PADDIV,KEY_PADDOT,KEY_PADENTER, -- beware: complicated on laptops
+
   MOUSE_L, MOUSE_M, MOUSE_R,
   GAMEPAD_CONNECTED, GAMEPAD_A, GAMEPAD_B, GAMEPAD_X, GAMEPAD_Y,
   GAMEPAD_UP, GAMEPAD_DOWN, GAMEPAD_LEFT, GAMEPAD_RIGHT, GAMEPAD_MENU, GAMEPAD_START,
   GAMEPAD_LB, GAMEPAD_RB, GAMEPAD_LTHUMB, GAMEPAD_RTHUMB,
-  WINDOW_BLUR, WINDOW_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE, WINDOW_MAXIMIZE,WINDOW_FULLSCREEN, WINDOW_WINDOWED,
-  GAMEPAD_LPAD, GAMEPAD_LPADY, GAMEPAD_RPAD, GAMEPAD_RPADY,
-  GAMEPAD_LT, GAMEPAD_RT, GAMEPAD_BATTERY,
+  WINDOW_BLUR, WINDOW_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE, WINDOW_MAXIMIZE, WINDOW_FULLSCREEN, WINDOW_WINDOWED,
+
+  -- floats: x7 gamepad, x3 mouse, x4 touch, x4 window
+  GAMEPAD_LPAD, GAMEPAD_LPADY,
+  GAMEPAD_RPAD, GAMEPAD_RPADY,
+  GAMEPAD_LTRIGGER, GAMEPAD_RTRIGGER, GAMEPAD_BATTERY,
   MOUSE, MOUSE_Y, MOUSE_W,
   TOUCH_X1, TOUCH_Y1, TOUCH_X2, TOUCH_Y2,
   WINDOW_RESIZE, WINDOW_RESIZEY, WINDOW_ORIENTATION, WINDOW_BATTERY,
-  GAMEPAD_GUID, GAMEPAD_NAME
+
+  -- strings: x2 gamepad
+  GAMEPAD_GUID, GAMEPAD_NAME,
 }
 
-global GAMEPAD_LPADX: cint <cimport, nodecl, const>
-global GAMEPAD_RPADX: cint <cimport, nodecl, const>
-global MOUSE_X: cint <cimport, nodecl, const>
-global WINDOW_RESIZEX: cint <cimport, nodecl, const>
+global GAMEPAD_LPADX:   cint <cimport, nodecl, const>
+global GAMEPAD_RPADX:   cint <cimport, nodecl, const>
+global GAMEPAD_LT:      cint <cimport, nodecl, const>
+global GAMEPAD_RT:      cint <cimport, nodecl, const>
+global MOUSE_X:         cint <cimport, nodecl, const>
+global WINDOW_RESIZEX:  cint <cimport, nodecl, const>
 
 -- memory
+
+-- default allocator (aborts on out-of-mem)
 global function xrealloc(p: pointer, sz: csize): pointer <cimport, nodecl> end
 global function xsize(p: pointer): csize <cimport, nodecl> end
+global function xstats(): cstring <cimport, nodecl> end
+
+-- stack based allocator (negative bytes does rewind stack, like when entering new frame)
 global function stack(bytes: cint): pointer <cimport, nodecl> end
+
+-- memory leaks
 global function watch(ptr: pointer, sz: cint): pointer <cimport, nodecl> end
 global function forget(ptr: pointer): pointer <cimport, nodecl> end
 
 -- network
-global function download(out: pointer, url: cstring <const>): cint <cimport, nodecl> end
+global function download(out: *FILE, url: cstring <const>): cint <cimport, nodecl> end
 global function portname(service_name: cstring <const>, retries: cuint): cint <cimport, nodecl> end
+
+-- udp wrapper
+
+-- server
 global function udp_bind(address: cstring <const>, port: cstring <const>): cint <cimport, nodecl> end
+
+-- client
 global function udp_open(address: cstring <const>, port: cstring <const>): cint <cimport, nodecl> end
-global function udp_sendto(arg1: cint, ip: cstring <const>, port: cstring <const>, buf: pointer <const>, len: cint): cint <cimport, nodecl> end
-global function udp_recv(arg1: cint, buf: pointer <const>, len: cint): cint <cimport, nodecl> end
-global function udp_peek(arg1: cint): cint <cimport, nodecl> end
+
+-- common
+global function udp_send(arg1: cint, buf: pointer <const>, len: cint): cint <cimport, nodecl> end -- <0 error, >0 bytes sent ok
+global function udp_sendto(arg1: cint, ip: cstring <const>, port: cstring <const>, buf: pointer <const>, len: cint): cint <cimport, nodecl> end -- <0 error, >0 bytes sent ok
+global function udp_recv(arg1: cint, buf: pointer, len: cint): cint <cimport, nodecl> end -- <0 error, 0 orderly shutdown, >0 received bytes
+global function udp_peek(arg1: cint): cint <cimport, nodecl> end -- <0 error, 0 timeout, >0 data
+
+-- tcp wrapper
+
+-- client
 global function tcp_open(address: cstring <const>, port: cstring <const>): cint <cimport, nodecl> end
+
+-- server
 global function tcp_bind(interface_: cstring <const>, port: cstring <const>, queue: cint): cint <cimport, nodecl> end
 global function tcp_peek(arg1: cint, callback: function(cint): cint): cint <cimport, nodecl> end
+
+-- common
 global function tcp_send(arg1: cint, buf: pointer <const>, len: cint): cint <cimport, nodecl> end
 global function tcp_recv(arg1: cint, buf: pointer, len: cint): cint <cimport, nodecl> end
-global function tcp_host(arg1: cint): cstring <cimport, nodecl> end
-global function tcp_port(arg1: cint): cstring <cimport, nodecl> end
+global function tcp_host(arg1: cint): cstring <cimport, nodecl> end -- info
+global function tcp_port(arg1: cint): cstring <cimport, nodecl> end -- info
+
 global function tcp_close(arg1: cint): cint <cimport, nodecl> end
-global function tcp_debug(arg1: cint): cint <cimport, nodecl> end
---global function tcp_printf(arg1: cint, fmt: cstring <const>, ...: cvarargs): cint <cimport, nodecl> end
---global function tcp_crypt(arg1: cint, arg2: uint64): cint <cimport, nodecl> end
+
+-- extras
+global function tcp_debug(arg1: cint): cint <cimport, nodecl> end -- toggle traffic monitoring on/off for given socket
+
+--[[
+global function tcp_printf(arg1: cint, fmt: cstring <const>, ...: cvarargs): cint <cimport, nodecl> end -- printf message in remote end
+global function tcp_crypt(arg1: cint, arg2: uint64): cint <cimport, nodecl> end -- set shared secret
+]]
 
 -- profile
 global profile_t: type <cimport, nodecl> = @record {
@@ -826,15 +1148,34 @@ global profile_t: type <cimport, nodecl> = @record {
   avg: int32
 }
 
-global function profile_init(): void <cimport, nodecl> end
-global function profile_incstat(name: cstring <const>, accum: cint): void <cimport, nodecl> end
-global function profile(...: cvarargs): void <cimport, nodecl> end
-global function profile_render(): void <cimport, nodecl> end
+global profiler_t: type <cimport, nodecl> = @record {
+  base: map,
+  tmp: record {
+    p: pair,
+    key: cstring,
+    val: profile_t
+  },
+  ptr: pointer,
+  tmpval: *profile_t,
+  typed_cmp: function(a: cstring, b: cstring): cint,
+  typed_hash: function(a: cstring): uint64
+}
+
+global function profile(section: cstring): void <cimport, nodecl> end
+global function profile_incstat(name: cstring <const>, accum: float64): void <cimport, nodecl> end
+
+global profiler: profiler_t <cimport, nodecl>
+global profiler_enabled: cint <cimport, nodecl>
 
 -- render
-global function rgba(r: uint8, g: uint8, b: uint8, a: uint8): uint32 <cimport, nodecl> end
-global function bgra(r: uint8, g: uint8, b: uint8, a: uint8): uint32 <cimport, nodecl> end
-global function alpha(rgba: uint32): float32 <cimport, nodecl> end
+global handle: type <cimport, nodecl> = @cuint
+
+global function rgba(r: uint8, g: uint8, b: uint8, a: uint8): cuint <cimport, nodecl> end
+global function bgra(r: uint8, g: uint8, b: uint8, a: uint8): cuint <cimport, nodecl> end
+global function rgbaf(r: float32, g: float32, b: float32, a: float32): cuint <cimport, nodecl> end
+global function bgraf(r: float32, g: float32, b: float32, a: float32): cuint <cimport, nodecl> end
+global function alpha(rgba: cuint): float32 <cimport, nodecl> end
+
 global function RGBX(rgb: uint32, x: uint8): uint32 <cimport, nodecl> end
 global function RGB3(r: uint8, g: uint8, b: uint8): uint32 <cimport, nodecl> end
 global function RGB4(r: uint8, g: uint8, b: uint8, a: uint8): uint32 <cimport, nodecl> end
@@ -850,27 +1191,31 @@ global YELLOW: uint32 <cimport, nodecl, const>
 global WHITE: uint32 <cimport, nodecl, const>
 global GRAY: uint32 <cimport, nodecl, const>
 
+-- images
+
+-- flags when constructing the image_t type. see: image, image_from_mem
 global IMAGE_FLAGS: type <cimport, nodecl, using> = @enum(cint) {
-  IMAGE_R    = 0x01000,
-  IMAGE_RG   = 0x02000,
-  IMAGE_RGB  = 0x04000,
-  IMAGE_RGBA = 0x08000,
-  IMAGE_FLIP = 0x10000
+  IMAGE_R     = 0x01000, -- 1-channel image (R)
+  IMAGE_RG    = 0x02000, -- 2-channel image (R,G)
+  IMAGE_RGB   = 0x04000, -- 3-channel image (R,G,B)
+  IMAGE_RGBA  = 0x08000, -- 4-channel image (R,G,B,A)
+  IMAGE_FLIP  = 0x10000, -- Flip image vertically
+  IMAGE_FLOAT = 0x20000  -- Float pixel components
 }
 
-global image_t: type <cimport, nodecl> = @union {
-  u1: union {
-    x: cuint,
-    w: cuint
-  },
-  u2: union {
-    y: cuint,
-    h: cuint
-  },
-  u3: union {
-    n: cuint,
-    comps: cuint
-  },
+--[[
+type that holds linear uncompressed bitmap of any given dimensions.
+
+w,h: image dimensions in pixels. `x,y` alias.
+comps: number of components per pixel. `n` alias.
+pixels: untyped pointer to linear bitmap data. typed pointers use `pixels8/16/32/f` aliases.
+see: texture_t
+]]
+
+global image_t: type <cimport, nodecl> = @record {
+  u1: union { x: cuint, w: cuint },
+  u2: union { y: cuint, h: cuint },
+  u3: union { n: cuint, comps: cuint },
   u4: union {
     pixels: pointer,
     pixels8: *[0]uint8,
@@ -884,22 +1229,26 @@ global function image(pathfile: cstring <const>, flags: cint): image_t <cimport,
 global function image_from_mem(ptr: pointer <const>, len: cint, flags: cint): image_t <cimport, nodecl> end
 global function image_destroy(img: *image_t): void <cimport, nodecl> end
 
-global TEXTURE_FLAGS: type <cimport, nodecl, using> = @enum(cint) {
-  TEXTURE_BC1 = 8,
-  TEXTURE_BC2 = 16,
-  TEXTURE_BC3 = 32,
-  --TEXTURE_BC4,
+-- textures
 
+global TEXTURE_FLAGS: type <cimport, nodecl, using> = @enum(cint) {
+  -- UNIT[0..7]
+  
+  TEXTURE_BC1 = 8,  -- DXT1, RGB with 8:1 compression ratio (+ optional 1bpp for alpha)
+  TEXTURE_BC2 = 16, -- DXT3, RGBA with 4:1 compression ratio (BC1 for RGB + 4bpp for alpha)
+  TEXTURE_BC3 = 32, -- DXT5, RGBA with 4:1 compression ratio (BC1 for RGB + BC4 for A)
+--TEXTURE_BC4,      -- Alpha
+  
   TEXTURE_NEAREST = 0,
   TEXTURE_LINEAR = 64,
   TEXTURE_MIPMAPS = 128,
 
-  TEXTURE_EDGE = 0,
+  TEXTURE_CLAMP = 0,
   TEXTURE_BORDER = 0x100,
   TEXTURE_REPEAT = 0x200,
 
   TEXTURE_BYTE = 0,
-  TEXTURE_FLOAT = 0x400,
+  TEXTURE_FLOAT = IMAGE_FLOAT,
 
   TEXTURE_COLOR = 0,
   TEXTURE_DEPTH = 0x800,
@@ -910,61 +1259,101 @@ global TEXTURE_FLAGS: type <cimport, nodecl, using> = @enum(cint) {
   TEXTURE_RGBA = IMAGE_RGBA,
   TEXTURE_FLIP = IMAGE_FLIP,
 
+  -- @fixme
   TEXTURE_SRGB = 1 << 24,
   TEXTURE_BGR = 1 << 25,
-  TEXTURE_ARRAY = 1 << 26
+  TEXTURE_ARRAY = 1 << 26,
 }
 
 global texture_t: type <cimport, nodecl> = @record {
-  u1: union {
-    x: cuint,
-    w: cuint
-  },
-  u2: union {
-    y: cuint,
-    h: cuint
-  },
-  u3: union {
-    z: cuint,
-    d: cuint
-  },
-  u4: union {
-    n: cuint,
-    bpp: cuint
-  },
-  id: cuint,
-  flags: cuint
+  u1: union { x: cuint, w: cuint },
+  u2: union { y: cuint, h: cuint },
+  u3: union { z: cuint, d: cuint },
+  u4: union { n: cuint, bpp: cuint },
+  id: handle, unit: handle,
+  flags: cuint,
+  filename: cstring,
+  transparent: boolean,
+  fbo: cuint -- for texture recording
 }
 
 global function texture_compressed(filename: cstring <const>, flags: cuint): texture_t <cimport, nodecl> end
 global function texture_compressed_from_mem(data: pointer <const>, len: cint, flags: cuint): texture_t <cimport, nodecl> end
+
 global function texture(filename: cstring <const>, flags: cint): texture_t <cimport, nodecl> end
-global function texture_from_mem(ptr: cstring <const>, len: cint, flags: cint): texture_t <cimport, nodecl> end
+global function texture_from_mem(ptr: pointer <const>, len: cint, flags: cint): texture_t <cimport, nodecl> end
 global function texture_create(w: cuint, h: cuint, n: cuint, pixels: pointer, flags: cint): texture_t <cimport, nodecl> end
 global function texture_checker(): texture_t <cimport, nodecl> end
 global function texture_destroy(t: *texture_t): void <cimport, nodecl> end
--- global function texture_add_loader(loader: function(cstring, *cint, *cint, *cint, cint, cint): cint): void <cimport, nodecl> end
+-- global function texture_add_loader(loader: function(filename: cstring <const>, w: *cint, h: *cint, bpp: *cint, reqbpp: cint, flags: cint): cint): void <cimport, nodecl> end
 global function texture_update(t: *texture_t, w: cuint, h: cuint, n: cuint, pixels: pointer, flags: cint): cuint <cimport, nodecl> end
-global function fullscreen_rgb_quad(texture_rgb: texture_t, gamma: float32): void <cimport, nodecl> end
-global function fullscreen_ycbcr_quad(texture_YCbCr: [3]texture_t, gamma: float32): void <cimport, nodecl> end
-global function tile(texture: texture_t, position: vec3, color: uint32, rotation: float32): void <cimport, nodecl> end
-global function sprite(texture: texture_t, position: [3]float32, rotation: float32, offset: [2]float32, scale: [2]float32, is_additive: cint, rgba: uint32, spritesheet: [3]float32): void <cimport, nodecl> end
-global function sprite_update(): void <cimport, nodecl> end
 
-global cubemap_t: type <cimport, nodecl> = @record {
-  id: cuint,
-  sh: [9]vec3
+global function texture_rec_begin(t: *texture_t, w: cuint, h: cuint): boolean <cimport, nodecl> end -- texture_rec
+global function texture_rec_end(t: *texture_t): void <cimport, nodecl> end                          -- texture_rec
+
+-- brdf
+global function brdf_lut(): texture_t <cimport, nodecl> end
+
+-- pbr materials
+
+global colormap_t: type <cimport, nodecl> = @record {
+  color: vec4,
+  texture: *texture_t
 }
 
-global function cubemap(image: image_t <const>, flags: cint): cubemap_t <cimport, nodecl> end
-global function cubemap6(image: [6]image_t <const>, flags: cint): cubemap_t <cimport, nodecl> end
+global function colormap(cm: *colormap_t, pbr_material_type: cstring <const>, load_as_srgb: boolean): boolean <cimport, nodecl> end
+
+global pbr_material_t: type <cimport, nodecl> = @record {
+  name: cstring,
+  diffuse: colormap_t,
+  normals: colormap_t,
+  specular: colormap_t,
+  albedo: colormap_t,
+  roughness: colormap_t,
+  metallic: colormap_t,
+  ao: colormap_t,
+  ambient: colormap_t,
+  emissive: colormap_t,
+  
+  specular_shininess: float32
+}
+
+global function pbr_material(pbr: *pbr_material_t, material: cstring <const>): boolean <cimport, nodecl> end
+global function pbr_material_destroy(m: *pbr_material_t): void <cimport, nodecl> end
+
+-- fullscreen quads
+global function fullscreen_rgb_quad(texture_rgb: texture_t, gamma: float32): void <cimport, nodecl> end
+global function fullscreen_ycbcr_quad(texture_YCbCr: [3]texture_t, gamma: float32): void <cimport, nodecl> end
+
+-- sprites
+
+-- texture id, position(x,y,depth sort), tint color, rotation angle
+global function tile(texture: texture_t, position: [3]float32, rotation: float32, color: uint32): void <cimport, nodecl> end
+
+-- texture id, position(x,y,depth sort), rotation angle, offset(x,y), scale(x,y), is_additive, tint color, spritesheet(frameNumber,X,Y) (frame in a X*Y spritesheet)
+global function sprite(texture: texture_t, position: [3]float32, rotation: float32, offset: [2]float32, scale: [2]float32, is_additive: cint, rgba: uint32, spritesheet: [3]float32): void <cimport, nodecl> end
+
+global function sprite_flush(): void <cimport, nodecl> end
+
+-- cubemaps
+
+global cubemap_t: type <cimport, nodecl> = @record {
+  id: cuint,  -- texture id
+  sh: [9]vec3 -- precomputed spherical harmonics coefficients
+}
+
+global function cubemap(image: image_t <const>, flags: cint): cubemap_t <cimport, nodecl> end     -- 1 equirectangular panorama
+global function cubemap6(images: [6]image_t <const>, flags: cint): cubemap_t <cimport, nodecl> end -- 6 cubemap faces
 global function cubemap_destroy(c: *cubemap_t): void <cimport, nodecl> end
 global function cubemap_get_active(): *cubemap_t <cimport, nodecl> end
+
+-- fbos
 global function fbo(texture_color: cuint, texture_depth: cuint, wr_flags: cint): cuint <cimport, nodecl> end
 global function fbo_bind(id: cuint): void <cimport, nodecl> end
 global function fbo_unbind(): void <cimport, nodecl> end
 global function fbo_destroy(id: cuint): void <cimport, nodecl> end
 
+-- shadowmaps
 global shadowmap_t: type <cimport, nodecl> = @record {
   shadowmatrix: mat44,
   mvp: mat44,
@@ -973,31 +1362,42 @@ global shadowmap_t: type <cimport, nodecl> = @record {
   light_position: vec4,
   saved_fb: cint,
   saved_viewport: [4]cint,
-  fbo: cuint,
-  texture: cuint,
+  fbo: handle,
+  texture: handle,
   texture_width: cint
 }
 
-global function shadowmap(texture_width: cint): shadowmap_t <cimport, nodecl> end
+global function shadowmap(texture_width: cint): shadowmap_t <cimport, nodecl> end -- = 1024
 global function shadowmap_destroy(s: *shadowmap_t): void <cimport, nodecl> end
+
 global function shadowmap_set_shadowmatrix(s: *shadowmap_t, aLightPos: vec3, aLightAt: vec3, aLightUp: vec3, projection: mat44 <const>): void <cimport, nodecl> end
 global function shadowmap_begin(s: *shadowmap_t): void <cimport, nodecl> end
 global function shadowmap_end(s: *shadowmap_t): void <cimport, nodecl> end
+
+-- shadowmap utils
+
 global function shadowmatrix_proj(shm_proj: mat44, aLightFov: float32, znear: float32, zfar: float32): void <cimport, nodecl> end
 global function shadowmatrix_ortho(shm_proj: mat44, left: float32, right: float32, bottom: float32, top: float32, znear: float32, zfar: float32): void <cimport, nodecl> end
 
+-- shaders
 global function shader(vs: cstring <const>, fs: cstring <const>, attribs: cstring <const>, fragcolor: cstring <const>): cuint <cimport, nodecl> end
 global function shader_bind(program: cuint): cuint <cimport, nodecl> end
+global function shader_bool(uniform: cstring <const>, b: boolean): void <cimport, nodecl> end
 global function shader_int(uniform: cstring <const>, i: cint): void <cimport, nodecl> end
+global function shader_uint(uniform: cstring <const>, i: cuint): void <cimport, nodecl> end
 global function shader_float(uniform: cstring <const>, f: float32): void <cimport, nodecl> end
 global function shader_vec2(uniform: cstring <const>, v: vec2): void <cimport, nodecl> end
 global function shader_vec3(uniform: cstring <const>, v: vec3): void <cimport, nodecl> end
 global function shader_vec4(uniform: cstring <const>, v: vec4): void <cimport, nodecl> end
 global function shader_mat44(uniform: cstring <const>, m: mat44): void <cimport, nodecl> end
 global function shader_texture(sampler: cstring <const>, texture: cuint, unit: cuint): void <cimport, nodecl> end
+global function shader_colormap(name: cstring <const>, cm: colormap_t): void <cimport, nodecl> end
 global function shader_get_active(): cuint <cimport, nodecl> end
 global function shader_destroy(shader: cuint): void <cimport, nodecl> end
 
+-- meshes
+
+-- STATIC, DYNAMIC, STREAM (zero|single|many updates per frame)
 global MESH_FLAGS: type <cimport, nodecl, using> = @enum(cint) {
   MESH_STATIC = 0,
   MESH_STREAM = 1,
@@ -1005,9 +1405,7 @@ global MESH_FLAGS: type <cimport, nodecl, using> = @enum(cint) {
 }
 
 global mesh_t: type <cimport, nodecl> = @record {
-  vao: cuint,
-  vbo: cuint,
-  ibo: cuint,
+  vao: handle, vbo: handle, ibo: handle,
   vertex_count: cuint,
   index_count: cuint,
   flags: cuint
@@ -1015,11 +1413,30 @@ global mesh_t: type <cimport, nodecl> = @record {
 
 global function mesh_create(format: cstring <const>, vertex_stride: cint, vertex_count: cint, interleaved_vertex_data: pointer <const>, index_count: cint, index_data: pointer <const>, flags: cint): mesh_t <cimport, nodecl> end
 global function mesh_upgrade(m: *mesh_t, format: cstring <const>, vertex_stride: cint, vertex_count: cint, interleaved_vertex_data: pointer <const>, index_count: cint, index_data: pointer <const>, flags: cint): void <cimport, nodecl> end
-global function mesh_push_state(m: *mesh_t, program: cuint, texture_id: cuint, model: [16]float32, view: [16]float32, proj: [16]float32, billboard: cuint): void <cimport, nodecl> end
-global function mesh_pop_state(m: *mesh_t): void <cimport, nodecl> end
 global function mesh_render(m: *mesh_t): void <cimport, nodecl> end
 global function mesh_destroy(m: *mesh_t): void <cimport, nodecl> end
 global function mesh_bounds(m: *mesh_t): aabb <cimport, nodecl> end
+
+-- materials
+
+global MATERIAL_ENUMS: type <cimport, nodecl, using> = @enum(cint) {
+  MAX_CHANNELS_PER_MATERIAL = 8
+}
+
+local material_layer_t: type <cimport, nodecl> = @record {
+  texname: [32]cchar,
+  texture: handle,
+  value: float32,
+  color: vec4 -- uint32
+}
+
+global material_t: type <cimport, nodecl> = @record {
+  name: cstring,
+  count: cint,
+  layer: [MAX_CHANNELS_PER_MATERIAL]material_layer_t
+}
+
+-- models
 
 global MODEL_FLAGS: type <cimport, nodecl, using> = @enum(cint) {
   MODEL_NO_ANIMATIONS = 1,
@@ -1029,18 +1446,32 @@ global MODEL_FLAGS: type <cimport, nodecl, using> = @enum(cint) {
 }
 
 global model_t: type <cimport, nodecl> = @record {
-  iqm: pointer,
+  iqm: pointer, -- private
+  
   num_textures: cuint,
-  textures: *[0]cuint,
+  textures: *handle,
+  texture_names: *[0]cstring,
+  materials: *material_t,
+  
   num_meshes: cuint,
   num_triangles: cuint,
-  num_joints: cuint,
+  num_joints: cuint, -- num_poses
   num_anims: cuint,
   num_frames: cuint,
-  program: cuint,
+  program: handle,
   curframe: float32,
   pivot: mat44,
+  
+  stride: cint, -- usually 60 bytes (12*4+4*3) for a p3 u2 n3 t4 i4B w4B c4B vertex stream
+  verts: pointer,
+  num_verts: cint,
+  vao: handle, ibo: handle, vbo: handle, vao_instanced: handle,
+  
   flags: cuint,
+  billboard: cuint,
+  
+  instanced_matrices: *[0]float32,
+  num_instances: cuint
 }
 
 global function model(filename: cstring <const>, flags: cint): model_t <cimport, nodecl> end
@@ -1049,11 +1480,16 @@ global function model_animate(m: model_t, curframe: float32): float32 <cimport, 
 global function model_animate_clip(m: model_t, curframe: float32, minframe: cint, maxframe: cint, loop: boolean): float32 <cimport, nodecl> end
 global function model_aabb(m: model_t, transform: mat44): aabb <cimport, nodecl> end
 global function model_render(m: model_t, proj: mat44, view: mat44, model: mat44, shader: cint): void <cimport, nodecl> end
+global function model_render_skeleton(m: model_t, model: mat44): void <cimport, nodecl> end
+global function model_render_instanced(m: model_t, model: mat44, view: mat44, models: *[0]mat44, shader: cint, count: cuint): void <cimport, nodecl> end
 global function model_set_texture(m: model_t, t: texture_t): void <cimport, nodecl> end
+global function model_get_bone_pose(m: model_t, joint: cuint, out: *mat34): boolean <cimport, nodecl> end
 global function model_destroy(m: model_t): void <cimport, nodecl> end
 
+-- skyboxes
+
 global skybox_t: type <cimport, nodecl> = @record {
-  program: cuint,
+  program: handle,
   geometry: mesh_t,
   cubemap: cubemap_t,
   flags: cint
@@ -1064,9 +1500,13 @@ global function skybox_push_state(sky: *skybox_t, proj: mat44, view: mat44): cin
 global function skybox_pop_state(sky: *skybox_t): cint <cimport, nodecl> end
 global function skybox_destroy(sky: *skybox_t): void <cimport, nodecl> end
 
-global function viewport_color(color: vec3): void <cimport, nodecl> end
+-- post-fxs
+
+global function viewport_color(color: uint32): void <cimport, nodecl> end
+global function viewport_color3(color: vec3): void <cimport, nodecl> end
 global function viewport_clear(color: boolean, depth: boolean): void <cimport, nodecl> end
 global function viewport_clip(from: vec2, to: vec2): void <cimport, nodecl> end
+
 global function fx_load(file: cstring <const>): void <cimport, nodecl> end
 global function fx_begin(): void <cimport, nodecl> end
 global function fx_end(): void <cimport, nodecl> end
@@ -1074,11 +1514,21 @@ global function fx_enable(pass: cint, enabled: cint): void <cimport, nodecl> end
 global function fx_enabled(pass: cint): cint <cimport, nodecl> end
 global function fx_enable_all(enabled: cint): void <cimport, nodecl> end
 global function fx_name(pass: cint): cstring <cimport, nodecl> end
-global function screenshot(components: cuint): pointer <cimport, nodecl> end
+
+-- utils
+global function screenshot(components: cuint): pointer <cimport, nodecl> end       -- 3 RGB, 4 RGBA, -3 BGR, -4 BGRA
+global function screenshot_async(components: cuint): pointer <cimport, nodecl> end -- 3 RGB, 4 RGBA, -3 BGR, -4 BGRA
 
 -- renderdd
+
 global function ddraw_color(rgb: cuint): void <cimport, nodecl> end
+global function ddraw_color_push(rgb: cuint): void <cimport, nodecl> end
+global function ddraw_color_pop(): void <cimport, nodecl> end
+
 global function ddraw_ontop(enabled: cint): void <cimport, nodecl> end
+global function ddraw_ontop_push(enabled: cint): void <cimport, nodecl> end
+global function ddraw_ontop_pop(): void <cimport, nodecl> end
+
 global function ddraw_aabb(minbb: vec3, maxbb: vec3): void <cimport, nodecl> end
 global function ddraw_aabb_corners(minbb: vec3, maxbb: vec3): void <cimport, nodecl> end
 global function ddraw_arrow(begin: vec3, _end: vec3): void <cimport, nodecl> end
@@ -1091,6 +1541,7 @@ global function ddraw_capsule(from: vec3, to: vec3, radius: float32): void <cimp
 global function ddraw_circle(pos: vec3, n: vec3, radius: float32): void <cimport, nodecl> end
 global function ddraw_cone(center: vec3, top: vec3, radius: float32): void <cimport, nodecl> end
 global function ddraw_cube(center: vec3, radius: float32): void <cimport, nodecl> end
+global function ddraw_cube3(center: vec3, radius: vec3, M: mat33): void <cimport, nodecl> end
 global function ddraw_diamond(from: vec3, to: vec3, size: float32): void <cimport, nodecl> end
 global function ddraw_frustum(projview: [16]float32): void <cimport, nodecl> end
 global function ddraw_ground(scale: float32): void <cimport, nodecl> end
@@ -1106,48 +1557,50 @@ global function ddraw_point(from: vec3): void <cimport, nodecl> end
 global function ddraw_position(pos: vec3, radius: float32): void <cimport, nodecl> end
 global function ddraw_position_dir(pos: vec3, dir: vec3, radius: float32): void <cimport, nodecl> end
 global function ddraw_pyramid(center: vec3, height: float32, segments: cint): void <cimport, nodecl> end
+global function ddraw_cylinder(center: vec3, height: float32, segments: cint): void <cimport, nodecl> end
 global function ddraw_sphere(pos: vec3, radius: float32): void <cimport, nodecl> end
 global function ddraw_square(pos: vec3, radius: float32): void <cimport, nodecl> end
---global function ddraw_text(pos: vec3, scale: float32, text: cstring <const>): void <cimport, nodecl> end
---global function ddraw_text2d(pos: vec2, scale: float32, text: cstring <const>): void <cimport, nodecl> end
-global function ddraw_text(pos: vec3, scale: float32, ...: cvarargs): void <cimport, nodecl> end
-global function ddraw_text2d(pos: vec2, scale: float32, ...: cvarargs): void <cimport, nodecl> end
+global function ddraw_text(pos: vec3, scale: float32, text: cstring <const>): void <cimport, nodecl> end
+global function ddraw_text2d(pos: vec2, text: cstring <const>): void <cimport, nodecl> end
+--global function ddraw_text(pos: vec3, scale: float32, ...: cvarargs): void <cimport, nodecl> end
+--global function ddraw_text2d(pos: vec2, scale: float32, ...: cvarargs): void <cimport, nodecl> end
 global function ddraw_triangle(p1: vec3, p2: vec3, p3: vec3): void <cimport, nodecl> end
+
+global function ddraw_prism(center: vec3, radius: float32, height: float32, normal: vec3, segments: cint): void <cimport, nodecl> end
+
 global function ddraw_demo(): void <cimport, nodecl> end
 global function ddraw_flush(): void <cimport, nodecl> end
+global function ddraw_flush_projview(proj: mat44, view: mat44): void <cimport, nodecl> end
 
--- scene
+-- camera
+
 global camera_t: type <cimport, nodecl> = @record {
-  view: mat44,
-  proj: mat44,
-  position: vec3,
-  up: vec3,
-  look: vec3,
-  yaw: float32,
-  pitch: float32,
-  speed: float32,
-  last_look: vec3,
-  last_move: vec3
+  view: mat44, proj: mat44,
+  position: vec3, up: vec3, look: vec3,         -- position, updir, lookdir
+  yaw: float32, pitch: float32, speed: float32, -- mirror_x, mirror_y;
+  last_look: vec3, last_move: vec3              -- used for friction and smoothing
 }
 
 global function camera(): camera_t <cimport, nodecl> end
-global function camera_move(cam: *camera_t, x: float32, y: float32, z: float32): void <cimport, nodecl> end
+global function camera_teleport(cam: *camera_t, px: float32, py: float32, pz: float32): void <cimport, nodecl> end
+global function camera_move(cam: *camera_t, incx: float32, incy: float32, incz: float32): void <cimport, nodecl> end
 global function camera_fps(cam: *camera_t, yaw: float32, pitch: float32): void <cimport, nodecl> end
+global function camera_orbit(cam: *camera_t, yaw: float32, pitch: float32, inc_distance: float32): void <cimport, nodecl> end
 global function camera_lookat(cam: *camera_t, target: vec3): void <cimport, nodecl> end
+global function camera_enable(cam: *camera_t): void <cimport, nodecl> end
 global function camera_get_active(): *camera_t <cimport, nodecl> end
+
+-- object
 
 global object_t: type <cimport, nodecl> = @record {
   renderbucket: uint64,
   transform: mat44,
   rot: quat,
-  sca: vec3,
-  pos: vec3,
-  euler: vec3,
-  pivot: vec3,
-  texture_id: cuint,
+  sca: vec3, pos: vec3, euler: vec3, pivot: vec3,
+  textures: *handle,
   model: model_t,
   bounds: aabb,
-  billboard: cuint
+  billboard: cuint -- [0..7] x(4),y(2),z(1) masks
 }
 
 global function object(): object_t <cimport, nodecl> end
@@ -1157,10 +1610,16 @@ global function object_teleport(obj: *object_t, pos: vec3): void <cimport, nodec
 global function object_move(obj: *object_t, inc: vec3): void <cimport, nodecl> end
 global function object_position(obj: *object_t): vec3 <cimport, nodecl> end
 global function object_scale(obj: *object_t, sca: vec3): void <cimport, nodecl> end
+
 global function object_model(obj: *object_t, model: model_t): void <cimport, nodecl> end
 global function object_diffuse(obj: *object_t, tex: texture_t): void <cimport, nodecl> end
+global function object_diffuse_push(obj: *object_t, tex: texture_t): void <cimport, nodecl> end
+global function object_diffuse_pop(obj: *object_t): void <cimport, nodecl> end
 global function object_billboard(obj: *object_t, mode: cuint): void <cimport, nodecl> end
+
 -- global function object_pose(obj: *object_t, transform: vec3): void <cimport, nodecl> end
+
+-- scene
 
 global SCENE_FLAGS: type <cimport, nodecl> = @enum(cint) {
   SCENE_WIREFRAME = 1,
@@ -1170,8 +1629,10 @@ global SCENE_FLAGS: type <cimport, nodecl> = @enum(cint) {
 }
 
 global scene_t: type <cimport, nodecl> = @record {
-  program: cuint,
+  program: handle,
   objs: *[0]object_t,
+  
+  -- special objects below:
   skybox: skybox_t,
   u_coefficients_sh: cint
 }
@@ -1179,8 +1640,10 @@ global scene_t: type <cimport, nodecl> = @record {
 global function scene_push(): *scene_t <cimport, nodecl> end
 global function scene_pop(): void <cimport, nodecl> end
 global function scene_get_active(): *scene_t <cimport, nodecl> end
+
 global function scene_merge(source: cstring <const>): cint <cimport, nodecl> end
 global function scene_render(flags: cint): void <cimport, nodecl> end
+
 global function scene_spawn(): *object_t <cimport, nodecl> end
 global function scene_count(): cuint <cimport, nodecl> end
 global function scene_index(index: cuint): *object_t <cimport, nodecl> end
@@ -1189,75 +1652,159 @@ global function scene_index(index: cuint): *object_t <cimport, nodecl> end
 global function script_init(): void <cimport, nodecl> end
 global function script_run(script: cstring <const>): void <cimport, nodecl> end
 global function script_runfile(pathfile: cstring <const>): void <cimport, nodecl> end
+
 global function script_bind_class(objname: cstring <const>, num_methods: cint, c_names: *[0]cstring <const>, c_functions: *[0]pointer): void <cimport, nodecl> end
 global function script_bind_function(c_name: cstring <const>, c_function: pointer): void <cimport, nodecl> end
 global function script_call(lua_function: cstring <const>): void <cimport, nodecl> end
 
 -- string
+
+-- string: temporary api (stack)
+global function tempvl(fmt: cstring <const>, l: cvalist): cstring <cimport, nodecl> end
+global function tempva(fmt: cstring <const>, ...: cvarargs): cstring <cimport, nodecl> end
+global function va(...: cvarargs): void <cimport, nodecl> end -- vs2015 check trick
+
+-- global function strcatf(s: *[0]cstring, buf: cstring <const>): cstring <cimport, nodecl> end
+global function strcatf(s: *[0]cstring, fmt: cstring <const>, ...: cvarargs): cstring <cimport, nodecl> end
 global function stringf(fmt: cstring <const>, ...: cvarargs): cstring <cimport, nodecl> end
-global function strcatf(x: *[0]cstring, buf: cstring <const>): cstring <cimport, nodecl> end
+
 global function strtok_s(str: cstring, delimiters: cstring <const>, context: *[0]cstring): cstring <cimport, nodecl> end
+global function strtok_r(str: cstring, delimiters: cstring <const>, context: *[0]cstring): cstring <cimport, nodecl> end
+
+-- utils
+
 global function strmatch(s: cstring <const>, wildcard: cstring <const>): cint <cimport, nodecl> end
+global function strmatchi(s: cstring <const>, wildcard: cstring <const>): cint <cimport, nodecl> end
+
 global function strcmp_qsort(a: pointer <const>, b: pointer <const>): cint <cimport, nodecl> end
 global function strcmpi_qsort(a: pointer <const>, b: pointer <const>): cint <cimport, nodecl> end
+
+-- returns true if both strings match at beginning. case sensitive
+global function strbeg(src: cstring <const>, sub: cstring <const>): boolean <cimport, nodecl> end
+
+-- returns true if both strings match at end. case sensitive
+global function strend(src: cstring <const>, sub: cstring <const>): boolean <cimport, nodecl> end
+
+-- returns true if both strings match at beginning. case insensitive
 global function strbegi(src: cstring <const>, sub: cstring <const>): boolean <cimport, nodecl> end
+
+-- returns true if both strings match at end. case insensitive
 global function strendi(src: cstring <const>, sub: cstring <const>): boolean <cimport, nodecl> end
+
+-- returns find first substring in string. case insensitive.
 global function strstri(src: cstring <const>, sub: cstring <const>): cstring <cimport, nodecl> end
+
 global function strupper(str: cstring <const>): cstring <cimport, nodecl> end
 global function strlower(str: cstring <const>): cstring <cimport, nodecl> end
+
+-- replace any 'target' as 'repl' in 'copy'. 'copy' may change (heap). returns 'copy'
 global function strrepl(copy: *[0]cstring, target: cstring <const>, replace: cstring <const>): cstring <cimport, nodecl> end
+
+-- replaced inline only if repl is shorter than target. no allocations.
 global function strswap(copy: cstring, target: cstring <const>, replace: cstring <const>): cstring <cimport, nodecl> end
+
+-- remove any 'target' in 'copy'. returns 'copy'
 global function strcut(copy: cstring, target: cstring <const>): cstring <cimport, nodecl> end
-global function str16to8(str: *cint <const>): cstring <cimport, nodecl> end
+
+--global function str16to8(str: *cint <const>): cstring <cimport, nodecl> end
+
+-- using key-value pairs, null-terminated
 global function strlerp(numpairs: cuint, pairs: *[0]cstring <const>, str: cstring <const>): cstring <cimport, nodecl> end
+
+-- concat 2 strings safely. always NUL terminates. may truncate.
 global function strlcat(dst: cstring, src: cstring <const>, dstcap: csize): csize <cimport, nodecl> end
+
+-- copy 2 strings safely. always NUL terminates. truncates if retval>=dstcap
 global function strlcpy(dst: cstring, src: cstring <const>, dstcap: csize): csize <cimport, nodecl> end
+
+--[[
+split `string` after any of `delimiters` character is found.
+returns temporary array of split strings. see: strjoin
+
+> array(char*) tokens = strsplit("hello! world!", " !"); => [0]="hello",[1]="world",
+]]
 global function strsplit(string: cstring <const>, delimiters: cstring <const>): *[0]cstring <cimport, nodecl> end
+
+--[[
+concatenate all elements within `list`, with `separator` string in between.
+returns: temporary joint string. see: strsplit
+
+> array(char*) tokens = strsplit("hello! world!", " !"); => [0]="hello",[1]="world",
+> char *joint = strjoin(tokens, "+");                    => joint="hello+world"
+]]
 global function strjoin(list: *[0]cstring, separator: cstring <const>): cstring <cimport, nodecl> end
+
+-- convert from wchar16(win) to utf8/ascii
+global function string8(str: *[0]wchar_t): cstring <cimport, nodecl> end
+
+-- convert from utf8 to utf32
+global function string32(utf8: cstring <const>): *[0]uint32 <cimport, nodecl> end
 
 -- system
 global function argc(): cint <cimport, nodecl> end
 global function argv(a: cint): cstring <cimport, nodecl> end
-global function flag(commalist: cstring <const>): cint <cimport, nodecl> end
-global function option(commalist: cstring <const>, defaults: cstring <const>): cstring <cimport, nodecl> end
-global function optioni(commalist: cstring <const>, defaults: cint): cint <cimport, nodecl> end
+
+global function flag(commalist: cstring <const>): cint <cimport, nodecl> end -- --arg
+global function option(commalist: cstring <const>, defaults: cstring <const>): cstring <cimport, nodecl> end -- --arg=key or --arg key
+global function optioni(commalist: cstring <const>, defaults: cint): cint <cimport, nodecl> end  -- argvi() ?
 global function optionf(commalist: cstring <const>, defaults: float32): float32 <cimport, nodecl> end
-global function os_exec_output(): cstring <cimport, nodecl> end
-global function os_exec(retvalue: *cint, command: cstring <const>): void <cimport, nodecl> end
+
+global function os_exec_output(): cstring <cimport, nodecl> end -- legacy
+--global function os_exec(command: cstring <const>): cint <cimport, nodecl> end -- legacy
+global function os_exec(...: cvarargs): cint <cimport, nodecl> end -- legacy
+--global function os_exec_(retvalue: *cint, command: cstring <const>): cstring <cimport, nodecl> end -- new
+global function os_exec_(rc: *cint, ...: cvarargs): cstring <cimport, nodecl> end -- legacy
+
 global function tty_color(color: cuint): void <cimport, nodecl> end
 global function tty_reset(): void <cimport, nodecl> end
+
 global function cpu_cores(): cint <cimport, nodecl> end
+
+-- return battery level [1..100]. also positive if charging (+), negative if discharging (-), and 0 if no battery is present.
+global function battery(): cint <cimport, nodecl> end
+
 global function app_name(): cstring <cimport, nodecl> end
 global function app_path(): cstring <cimport, nodecl> end
 global function app_cache(): cstring <cimport, nodecl> end
 global function app_temp(): cstring <cimport, nodecl> end
-global function app_reload(): void <cimport, nodecl> end
-global function date(): uint64 <cimport, nodecl> end
-global function date_epoch(): uint64 <cimport, nodecl> end
+
+-- global function app_reload(): void <cimport, nodecl> end
+
+global function date(): uint64 <cimport, nodecl> end         -- YYYYMMDDhhmmss
+global function date_epoch(): uint64 <cimport, nodecl> end   -- linux epoch
+global function date_string(): float64 <cimport, nodecl> end -- "YYYY-MM-DD hh:mm:ss"
+global function time_hh(): float64 <cimport, nodecl> end
+global function time_mm(): float64 <cimport, nodecl> end
 global function time_ss(): float64 <cimport, nodecl> end
-global function time_ms(): float64 <cimport, nodecl> end
+global function time_ms(): uint64 <cimport, nodecl> end
 global function time_us(): uint64 <cimport, nodecl> end
-global function sleep_ss(ss: float64): float64 <cimport, nodecl> end
-global function sleep_ms(ms: float64): float64 <cimport, nodecl> end
-global function sleep_us(us: uint64): uint64 <cimport, nodecl> end
-global function callstack(traces: cint): cstring <cimport, nodecl> end
-global function callstackf(fp: *FILE, traces: cint): cint <cimport, nodecl> end
+global function time_ns(): uint64 <cimport, nodecl> end
+global function sleep_ss(ss: float64): void <cimport, nodecl> end
+global function sleep_ms(ms: float64): void <cimport, nodecl> end
+global function sleep_us(us: float64): void <cimport, nodecl> end
+global function sleep_ns(ns: float64): void <cimport, nodecl> end
+
+global function callstack(traces: cint): cstring <cimport, nodecl> end          -- write callstack into a temporary string. do not delete it.
+global function callstackf(fp: *FILE, traces: cint): cint <cimport, nodecl> end -- write callstack to file. <0 traces to invert order.
+
 global function die(message: cstring <const>): void <cimport, nodecl> end
 global function alert(message: cstring <const>): void <cimport, nodecl> end
 global function hexdump(ptr: pointer <const>, len: cuint): void <cimport, nodecl> end
 global function hexdumpf(fp: *FILE, ptr: pointer <const>, len: cuint, width: cint): void <cimport, nodecl> end
 global function breakpoint(reason: cstring <const>): void <cimport, nodecl> end
 global function has_debugger(): boolean <cimport, nodecl> end
-global function lil16(n: uint16): uint16 <cimport, nodecl> end
-global function lil32(n: uint32): uint16 <cimport, nodecl> end
-global function lil32f(n: float32): float32 <cimport, nodecl> end
-global function lil64(n: uint64): uint64 <cimport, nodecl> end
-global function lil64f(n: float64): float64 <cimport, nodecl> end
-global function big16(n: uint16): uint16 <cimport, nodecl> end
-global function big32(n: uint32): uint16 <cimport, nodecl> end
-global function big32f(n: float32): float32 <cimport, nodecl> end
-global function big64(n: uint64): uint64 <cimport, nodecl> end
-global function big64f(n: float64): float64 <cimport, nodecl> end
+
+global function lil16(n: uint16): uint16 <cimport, nodecl>    end -- swap16 as lil
+global function lil32(n: uint32): uint16 <cimport, nodecl>    end -- swap32 as lil
+global function lil32f(n: float32): float32 <cimport, nodecl> end -- swap32 as lil
+global function lil64(n: uint64): uint64 <cimport, nodecl>    end -- swap64 as lil
+global function lil64f(n: float64): float64 <cimport, nodecl> end -- swap64 as lil
+global function big16(n: uint16): uint16 <cimport, nodecl>    end -- swap16 as big
+global function big32(n: uint32): uint16 <cimport, nodecl>    end -- swap32 as big
+global function big32f(n: float32): float32 <cimport, nodecl> end -- swap32 as big
+global function big64(n: uint64): uint64 <cimport, nodecl>    end -- swap64 as big
+global function big64f(n: float64): float64 <cimport, nodecl> end -- swap64 as big
+
 global function lil16p(n: pointer, sz: cint): *uint16 <cimport, nodecl> end
 global function lil32p(n: pointer, sz: cint): *uint16 <cimport, nodecl> end
 global function lil32pf(n: pointer, sz: cint): *float32 <cimport, nodecl> end
@@ -1268,28 +1815,48 @@ global function big32p(n: pointer, sz: cint): *uint16 <cimport, nodecl> end
 global function big32pf(n: pointer, sz: cint): *float32 <cimport, nodecl> end
 global function big64p(n: pointer, sz: cint): *uint64 <cimport, nodecl> end
 global function big64pf(n: pointer, sz: cint): *float64 <cimport, nodecl> end
-global function PRINTF(...: cvarargs): cint <cimport, nodecl> end
+
+-- global function PANIC(error: cstring <const>, file: cstring <const>, line: cint): cint <cimport, nodecl> end
 global function PANIC(...: cvarargs): cint <cimport, nodecl> end
 -- global function PRINTF(text: cstring <const>, stack: cstring <const>, file: cstring <const>, line: cint, function: cstring <const>): cint <cimport, nodecl> end
--- global function PANIC(error: cstring <const>, file: cstring <const>, line: cint): cint <cimport, nodecl> end
+global function PRINTF(...: cvarargs): cint <cimport, nodecl> end
 
 -- ui
-global function ui_begin(title: cstring <const>, flags: cint): cint <cimport, nodecl> end
+global function ui_notify(title: cstring <const>, body: cstring <const>): cint <cimport, nodecl> end
+global function ui_window(title: cstring <const>, enabled: *cint): cint <cimport, nodecl> end
+global function ui_panel(title: cstring <const>, flags: cint): cint <cimport, nodecl> end
+global function ui_collapse(label: cstring <const>, id: *cstring <const>): cint <cimport, nodecl> end
+global function ui_context(): cint <cimport, nodecl> end
+global function ui_section(title: cstring <const>): cint <cimport, nodecl> end
 global function ui_int(label: cstring <const>, value: *cint): cint <cimport, nodecl> end
 global function ui_bool(label: cstring <const>, value: *boolean): cint <cimport, nodecl> end
 global function ui_short(label: cstring <const>, value: *cshort): cint <cimport, nodecl> end
 global function ui_float(label: cstring <const>, value: *float32): cint <cimport, nodecl> end
 global function ui_float2(label: cstring <const>, value: [2]float32): cint <cimport, nodecl> end
 global function ui_float3(label: cstring <const>, value: [3]float32): cint <cimport, nodecl> end
+global function ui_float4(label: cstring <const>, value: [4]float32): cint <cimport, nodecl> end
 global function ui_string(label: cstring <const>, buffer: cstring, buflen: cint): cint <cimport, nodecl> end
-global function ui_color3(label: cstring <const>, color3: *[0]float32): cint <cimport, nodecl> end
-global function ui_color4(label: cstring <const>, color4: *[0]float32): cint <cimport, nodecl> end
+global function ui_color3(label: cstring <const>, color3: *[0]float32): cint <cimport, nodecl> end  -- [0..255]
+global function ui_color3f(label: cstring <const>, color3: *[0]float32): cint <cimport, nodecl> end -- [0..1]
+global function ui_color4(label: cstring <const>, color4: *[0]float32): cint <cimport, nodecl> end  -- [0..255]
+global function ui_color4f(label: cstring <const>, color4: *[0]float32): cint <cimport, nodecl> end -- [0..1]
 global function ui_button(label: cstring <const>): cint <cimport, nodecl> end
+global function ui_buttons(buttons: cint, ...: cvarargs): cint <cimport, nodecl> end
+global function ui_button_transparent(label: cstring <const>): cint <cimport, nodecl> end
+global function ui_toolbar(icons: cstring <const>): cint <cimport, nodecl> end   -- int clicked_icon = ui_toolbar( ICON_1 ";" ICON_2 ";" ICON_3 ";" ICON_4 );
+global function ui_submenu(options: cstring <const>): cint <cimport, nodecl> end -- int choice = ui_submenu("A;B;C;D");
+global function ui_browse(outfile: *cstring <const>, inlined: *boolean): cint <cimport, nodecl> end
 global function ui_toggle(label: cstring <const>, value: *boolean): cint <cimport, nodecl> end
 global function ui_dialog(title: cstring <const>, text: cstring <const>, choices: cint, show: *boolean): cint <cimport, nodecl> end
 global function ui_list(label: cstring <const>, items: *[0]cstring <const>, num_items: cint, selector: *cint): cint <cimport, nodecl> end
-global function ui_image(label: cstring <const>, img: texture_t): cint <cimport, nodecl> end
+global function ui_radio(label: cstring <const>, items: *[0]cstring <const>, num_items: cint, selector: *cint): cint <cimport, nodecl> end
+global function ui_image(label: cstring <const>, id: handle, w: cuint, h: cuint): cint <cimport, nodecl> end -- (w,h) can be 0
+global function ui_colormap(map_name: cstring <const>, cm: *colormap_t): cint <cimport, nodecl> end -- returns num member changed: 1 for color, 2 for texture map
 global function ui_separator(): cint <cimport, nodecl> end
+global function ui_bits8(label: cstring <const>, bits: *[0]uint8): cint <cimport, nodecl> end
+global function ui_bits16(label: cstring <const>, bits: *[0]uint16): cint <cimport, nodecl> end
+global function ui_console(): cint <cimport, nodecl> end
+global function ui_clampf(label: cstring <const>, value: *float32, minf: float32, maxf: float32): cint <cimport, nodecl> end
 global function ui_label(label: cstring <const>): cint <cimport, nodecl> end
 global function ui_label2(label: cstring <const>, caption: cstring <const>): cint <cimport, nodecl> end
 global function ui_slider(label: cstring <const>, value: *float32): cint <cimport, nodecl> end
@@ -1297,18 +1864,41 @@ global function ui_slider2(label: cstring <const>, value: *float32, caption: cst
 global function ui_const_bool(label: cstring <const>, value: boolean <const>): cint <cimport, nodecl> end
 global function ui_const_float(label: cstring <const>, value: float32 <const>): cint <cimport, nodecl> end
 global function ui_const_string(label: cstring <const>, value: cstring <const>): cint <cimport, nodecl> end
-global function ui_const_stringf(label: cstring <const>, ...: cvarargs): cint <cimport, nodecl> end
-global function ui_end(): void <cimport, nodecl> end
-global function ui_menu(items: cstring <const>): cint <cimport, nodecl> end
+--global function ui_const_stringf(label: cstring <const>, ...: cvarargs): cint <cimport, nodecl> end
+global function ui_context_end(): cint <cimport, nodecl> end
+global function ui_collapse_clicked(): cint <cimport, nodecl> end
+global function ui_collapse_end(): cint <cimport, nodecl> end
+global function ui_panel_end(): cint <cimport, nodecl> end
+global function ui_window_end(): cint <cimport, nodecl> end
+
+global function ui_show(panel_or_window_title: cstring <const>, enabled: cint): cint <cimport, nodecl> end
+global function ui_visible(panel_or_window_title: cstring <const>): cint <cimport, nodecl> end
+
+global function ui_has_menubar(): cint <cimport, nodecl> end
+global function ui_menu(items: cstring <const>): cint <cimport, nodecl> end -- semicolon- or comma-separated items
 global function ui_item(): cint <cimport, nodecl> end
+
+global function ui_popups(): cint <cimport, nodecl> end
 global function ui_hover(): cint <cimport, nodecl> end
 global function ui_active(): cint <cimport, nodecl> end
-global function ui_demo(): void <cimport, nodecl> end
+
+global function ui_demo(): cint <cimport, nodecl> end
 
 -- video
+
+global VIDEO_FLAGS: type <cimport, nodecl, using> = @enum(cint) {
+  VIDEO_YCBCR = 0,
+  VIDEO_RGB = 1,
+  
+  VIDEO_AUDIO = 0,
+  VIDEO_NO_AUDIO = 2
+}
+
 global video_t: type <cimport, nodecl, forwarddecl> = @record {}
+
 global function video(filename: cstring <const>, flags: cint): *video_t <cimport, nodecl> end
-global function video_decode(v: *video_t): *texture_t <cimport, nodecl> end
+global function video_decode(v: *video_t): *texture_t <cimport, nodecl> end      -- decodes next frame, returns associated texture(s)
+global function video_textures(v: *video_t): *[0]texture_t <cimport, nodecl> end -- returns last video textures. does not perform any decoding.
 global function video_has_finished(v: *video_t): cint <cimport, nodecl> end
 global function video_duration(v: *video_t): float64 <cimport, nodecl> end
 global function video_seek(v: *video_t, seek_to: float64): cint <cimport, nodecl> end
@@ -1317,34 +1907,56 @@ global function video_pause(v: *video_t, pause: boolean): void <cimport, nodecl>
 global function video_is_paused(v: *video_t): boolean <cimport, nodecl> end
 global function video_destroy(v: *video_t): void <cimport, nodecl> end
 
+-- video recorder
+global function record_start(outfile_mp4: cstring <const>): boolean <cimport, nodecl> end
+global function record_active(): boolean <cimport, nodecl> end
+global function record_stop(): void <cimport, nodecl> end
+
 -- window
 global WINDOW_FLAGS: type <cimport, nodecl, using> = @enum(cint) {
-  WINDOW_NO_MOUSE = 0x01,
-
   WINDOW_MSAA2 = 0x02,
   WINDOW_MSAA4 = 0x04,
   WINDOW_MSAA8 = 0x08,
 
   WINDOW_SQUARE = 0x20,
   WINDOW_PORTRAIT = 0x40,
-  WINDOW_LANDSCAPE = 0x80
+  WINDOW_LANDSCAPE = 0x80,
+  WINDOW_ASPECT = 0x100, -- keep aspect
+  WINDOW_FIXED = 0x200,  -- disable resizing
+
+  WINDOW_VSYNC = 0,
+  WINDOW_VSYNC_ADAPTIVE = 0x1000,
+  WINDOW_VSYNC_DISABLED = 0x2000,
 }
 
-global function window_create(zoom: float32, flags: cint): void <cimport, nodecl> end
+global function window_create(scale: float32, flags: cuint): boolean <cimport, nodecl> end
+global function window_create_from_handle(handle: pointer, scale: float32, flags: cuint): boolean <cimport, nodecl> end
+global function window_reload(): void <cimport, nodecl> end
+
+global function window_frame_begin(): cint <cimport, nodecl> end
+global function window_frame_end(): void <cimport, nodecl> end
+global function window_frame_swap(): void <cimport, nodecl> end
+global function window_swap(): cint <cimport, nodecl> end -- single function that combines above functions (desktop only)
+
+global function window_loop(func: function(loopArg: pointer): void, loopArg: pointer): void <cimport, nodecl> end -- run main loop function continuously (emscripten only)
+global function window_loop_exit(): void <cimport, nodecl> end -- exit from main loop function (emscripten only)
+
 global function window_title(title: cstring <const>): void <cimport, nodecl> end
 global function window_icon(file_icon: cstring <const>): void <cimport, nodecl> end
-global function window_flush(): void <cimport, nodecl> end
-global function window_swap(): cint <cimport, nodecl> end
+global function window_canvas(): vec2 <cimport, nodecl> end
 global function window_handle(): pointer <cimport, nodecl> end
+global function window_stats(): cstring <cimport, nodecl> end
+
+global function window_frame(): uint64 <cimport, nodecl> end
 global function window_width(): cint <cimport, nodecl> end
 global function window_height(): cint <cimport, nodecl> end
-global function window_aspect(): float64 <cimport, nodecl> end
 global function window_time(): float64 <cimport, nodecl> end
 global function window_delta(): float64 <cimport, nodecl> end
-global function window_fps(): float64 <cimport, nodecl> end
-global function window_hook(func: function(): void, userdata: pointer): boolean <cimport, nodecl> end
-global function window_unhook(func: function(): void, userdata: pointer): void <cimport, nodecl> end
-global function window_focus(): void <cimport, nodecl> end
+
+-- global function window_hook(func: function(): void, userdata: pointer): boolean <cimport, nodecl> end
+-- global function window_unhook(func: function(): void, userdata: pointer): void <cimport, nodecl> end
+
+global function window_focus(): void <cimport, nodecl> end -- window attribute api using haz catz language for now
 global function window_has_focus(): cint <cimport, nodecl> end
 global function window_fullscreen(enabled: cint): void <cimport, nodecl> end
 global function window_has_fullscreen(): cint <cimport, nodecl> end
@@ -1354,7 +1966,15 @@ global function window_pause(): void <cimport, nodecl> end
 global function window_has_pause(): cint <cimport, nodecl> end
 global function window_visible(visible: cint): void <cimport, nodecl> end
 global function window_has_visible(): cint <cimport, nodecl> end
-global function window_videorec(filename_mpg: cstring <const>): void <cimport, nodecl> end
-global function window_has_videorec(): cint <cimport, nodecl> end
-global function window_screenshot(filename_png: cstring <const>): void <cimport, nodecl> end
---global function window_title(...: cvarargs): void <cimport, nodecl> end
+
+global function window_aspect(): float64 <cimport, nodecl> end
+global function window_aspect_lock(numer: cuint, denom: cuint): void <cimport, nodecl> end
+global function window_aspect_unlock(): void <cimport, nodecl> end
+
+global function window_fps(): float64 <cimport, nodecl> end
+global function window_fps_target(): float64 <cimport, nodecl> end
+global function window_fps_lock(fps: float32): void <cimport, nodecl> end
+global function window_fps_unlock(): void <cimport, nodecl> end
+
+global function window_screenshot(outfile_png: cstring <const>): void <cimport, nodecl> end
+global function window_record(outfile_mp4: cstring <const>): cint <cimport, nodecl> end
